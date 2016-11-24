@@ -129,7 +129,7 @@ html, body {
 }*/
 
 /* VISUAL */
-#visual {
+#work {
 
 
 
@@ -284,7 +284,7 @@ html, body {
 }*/
 
 
-#join {
+#contact {
   display: flex;
   flex-direction: column;
   justify-content: center; /* vertically aligns items */
@@ -307,7 +307,7 @@ html, body {
   height: 100%;
 }
 
-#join h4 {
+#contact h4 {
   color: #66666e;
   width: 60%;
 }
