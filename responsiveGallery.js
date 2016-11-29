@@ -558,7 +558,7 @@ $(document).ready(function() {
   // var desc = "This is a really cool description for a cool art piece! Crocodiles are yummy and aligators are a little scary O:) I don't really know what I'm saying but am just trying to say some giberish. Because afterall, I have to fill this space with something!";
 
 
-  var why = "<br><br><span style='font-weight: 900;'>Why:</span> ";
+  var why = "<br><span style='font-weight: 900;'>Why:</span> ";
   var how = "<br><br><span style='font-weight: 900;'>How:</span> ";
   var next = "<br><br><span style='font-weight: 900;'>Whats Next:</span> ";
   
@@ -620,12 +620,9 @@ $(document).ready(function() {
   addImagePost('images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
   addImagePost('images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
   addImagePost('images/virgoWebappMain.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('images/VirgoAppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
+  addImagePost('images/AppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
   addImagePost('images/dental.jpeg', 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
   addImagePost('images/BforWaterInfog.png', 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
-
-
-
 
 
   
@@ -722,10 +719,18 @@ $(document).ready(function() {
     var marginBorders = 2 * parseInt($(this).css("marginRight").replace('px', ''));
 
 
-    //expandedPanel.find('.description').show();
-    var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders; //- $(this).find('.text').outerHeight();
-    //expandedPanel.find('.description').hide();
-    var maxWidth = $(window).width() - marginBorders;
+    var arbitrarySizeBoundry = Infinity;//minimizedGallerySize * 2
+
+
+    // //expandedPanel.find('.description').show();
+    // var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders; //- $(this).find('.text').outerHeight();
+    // //expandedPanel.find('.description').hide();
+    // var maxWidth = $(window).width() - marginBorders;
+
+
+    // Setting max size to min of the max possible size of screen and arbitrarySizeBoundry (to prevent it from always filling the screen)
+    var maxHeight = Math.min(arbitrarySizeBoundry, $(window).height() - $('.menu').outerHeight() - marginBorders);
+    var maxWidth = Math.min(arbitrarySizeBoundry, $(window).width() - marginBorders);
 
 
     // $(this).find('.imageContainer').css( "width", "auto" );

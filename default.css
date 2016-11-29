@@ -191,9 +191,13 @@ html, body {
 }
 
 .imagePanel .description {
-  color: #3b1f2b;
+  color: #59656f;
   text-align: left;
   display: none;
+}
+
+.imagePanel a {
+  color: #59656f;
 }
 
 .imageContainer {
@@ -363,8 +367,8 @@ like a scrollbar that will be always visisble!*/
   left: 0px;
   right: 0px;
   background-color: #0a0908;
-  padding-top: 1%;
-  padding-bottom: 1%;
+  padding-top: 2%;
+  padding-bottom: 2%;
   color: white;
 }
 
