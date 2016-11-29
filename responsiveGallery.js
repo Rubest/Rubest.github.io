@@ -216,54 +216,54 @@ $(window).resize(function() {
     globalResizeTimer = window.setTimeout(function() {
         // NOTE: CODE BELOW IS DIRECTLY COPIED AND MODIFIED FROM BELOW -- MAKE A PROPER HELPER FUNCTION THAT EXPANDS PANELS INSTEAD THAT BOTH OF THOSE CAN CALL
         
-        currPanel = expandedPanel;
+        //currPanel = expandedPanel;
 
         shrinkImage();
 
-        expandedPanel = currPanel;
-        expandedPanel.find('.text').hide();
+//         expandedPanel = currPanel;
+//         expandedPanel.find('.text').hide();
 
-        var imgHeight = expandedPanel.find('.imageContainer img').height();
-        var imgWidth = expandedPanel.find('.imageContainer img').width();
+//         var imgHeight = expandedPanel.find('.imageContainer img').height();
+//         var imgWidth = expandedPanel.find('.imageContainer img').width();
 
-        var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
+//         var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
 
-        var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
-        var maxWidth = $(window).width() - marginBorders;
-        var newWidth = maxHeight * imgWidth / imgHeight;
-        var newHeight = maxWidth * imgHeight / imgWidth;
+//         var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
+//         var maxWidth = $(window).width() - marginBorders;
+//         var newWidth = maxHeight * imgWidth / imgHeight;
+//         var newHeight = maxWidth * imgHeight / imgWidth;
 
-        if (newWidth < maxWidth) {
-          expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
-          expandedPanel.find('.imageContainer').css( "width", px(newWidth));
+//         if (newWidth < maxWidth) {
+//           expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
+//           expandedPanel.find('.imageContainer').css( "width", px(newWidth));
 
-        } else {
-          expandedPanel.find('.imageContainer').css( "height", px(newHeight));
-          expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
-        }
+//         } else {
+//           expandedPanel.find('.imageContainer').css( "height", px(newHeight));
+//           expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
+//         }
 
-        expandedPanel.find('.close').show(1400);
+//         expandedPanel.find('.close').show(1400);
 
-        setTimeout(function() {
-          if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-            placeDescription(expandedPanel, "left", "below")
-          } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-            placeDescription(expandedPanel, "right", "below");
-          } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-            setDescriptionToRight(expandedPanel);
-          } else {
-            setDescriptionToBottom(expandedPanel);
-          }
+//         setTimeout(function() {
+//           if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+//             placeDescription(expandedPanel, "left", "below")
+//           } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+//             placeDescription(expandedPanel, "right", "below");
+//           } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
+//             setDescriptionToRight(expandedPanel);
+//           } else {
+//             setDescriptionToBottom(expandedPanel);
+//           }
 
-          p(spaceExistsToLeftOrRight(expandedPanel));
-          p(spaceExistsUnderCollapsedPanel(expandedPanel));
+//           p(spaceExistsToLeftOrRight(expandedPanel));
+//           p(spaceExistsUnderCollapsedPanel(expandedPanel));
 
-          p(isThereSpaceOnTheLeft(expandedPanel));
-          p(isThereSpaceOnTheRight(expandedPanel));
+//           p(isThereSpaceOnTheLeft(expandedPanel));
+//           p(isThereSpaceOnTheRight(expandedPanel));
 
-          scrollTo(expandedPanel, 0);
+//           scrollTo(expandedPanel, 0);
 
-        }, 1400);
+//         }, 1400);
 
 
     }, 200);
