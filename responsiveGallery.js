@@ -2,6 +2,16 @@
   - when webpage is resized, the expanded panel should reload
   - try to have images expand and shrink such that the page isnt scrolled at all but the image remains visible on screen
   - bug when click on expanded image again, sometimes only title and author, but not description show up
+  - Have gifs play only on mouseover: 
+      https://github.com/ctrl-freaks/freezeframe.js/
+      http://stackoverflow.com/questions/5818003/stop-a-gif-animation-onload-on-mouseover-start-the-activation
+  - Animations:
+      http://valhead.com/2013/03/11/animation-play-state/
+  - Videos to gifs:
+      ezgif.com
+  – 'scroll for more' tag in long descriptions
+  _ when hover, have not just image expand, but the image container and padding decrease for a more dynamic feel
+
 
 
    FIXED
@@ -65,7 +75,7 @@ function addImagePost(imgURL, title, author, description, containerClass) {
     +   "</div>"
     +   "<div class='text'>"
     +     "<div class='title'>" + title + "</div>"
-    +     "<span class='divider'> - </span>"
+    +     "<span class='divider'> | </span>"
     +     "<div class='author'>" + author + "</div>"
     +     "<div class='description'>" + description + "</div>"
     +   "</div>"
@@ -195,6 +205,71 @@ function unconvertBlurbStyle(entity) {
 //
 //     OTHER 
 //______________________________________________________________________________________________
+
+
+// A timer value to make sure that the refresh screen function isnt called
+// repeatedly while the screen is actively being resized
+var globalResizeTimer = null;
+
+$(window).resize(function() {
+    if(globalResizeTimer != null) window.clearTimeout(globalResizeTimer);
+    globalResizeTimer = window.setTimeout(function() {
+        // NOTE: CODE BELOW IS DIRECTLY COPIED AND MODIFIED FROM BELOW -- MAKE A PROPER HELPER FUNCTION THAT EXPANDS PANELS INSTEAD THAT BOTH OF THOSE CAN CALL
+        
+        currPanel = expandedPanel;
+
+        shrinkImage();
+
+        expandedPanel = currPanel;
+        expandedPanel.find('.text').hide();
+
+        var imgHeight = expandedPanel.find('.imageContainer img').height();
+        var imgWidth = expandedPanel.find('.imageContainer img').width();
+
+        var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
+
+        var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
+        var maxWidth = $(window).width() - marginBorders;
+        var newWidth = maxHeight * imgWidth / imgHeight;
+        var newHeight = maxWidth * imgHeight / imgWidth;
+
+        if (newWidth < maxWidth) {
+          expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
+          expandedPanel.find('.imageContainer').css( "width", px(newWidth));
+
+        } else {
+          expandedPanel.find('.imageContainer').css( "height", px(newHeight));
+          expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
+        }
+
+        expandedPanel.find('.close').show(1400);
+
+        setTimeout(function() {
+          if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+            placeDescription(expandedPanel, "left", "below")
+          } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+            placeDescription(expandedPanel, "right", "below");
+          } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
+            setDescriptionToRight(expandedPanel);
+          } else {
+            setDescriptionToBottom(expandedPanel);
+          }
+
+          p(spaceExistsToLeftOrRight(expandedPanel));
+          p(spaceExistsUnderCollapsedPanel(expandedPanel));
+
+          p(isThereSpaceOnTheLeft(expandedPanel));
+          p(isThereSpaceOnTheRight(expandedPanel));
+
+          scrollTo(expandedPanel, 0);
+
+        }, 1400);
+
+
+    }, 200);
+});
+
+
 
 
 
@@ -480,33 +555,133 @@ function resizeImageOnHover(imagePanel, percent) {
 
 $(document).ready(function() {
 
-  var desc = "This is a really cool description for a cool art piece! Crocodiles are yummy and aligators are a little scary O:) I don't really know what I'm saying but am just trying to say some giberish. Because afterall, I have to fill this space with something!";
+  // var desc = "This is a really cool description for a cool art piece! Crocodiles are yummy and aligators are a little scary O:) I don't really know what I'm saying but am just trying to say some giberish. Because afterall, I have to fill this space with something!";
 
-  addImagePost('images/spider.jpg', 'Spiderman', 'Peter Parker', desc, '#visual');
-  addImagePost('images/guard.JPG', 'Guardian', 'Peter Quill', desc, '#visual');
 
-  addImagePost('images/guard.JPG', 'Guardian2', 'Peter Quill', desc, '#visual');
+  var why = "<br><br><span style='font-weight: 900;'>Why:</span> ";
+  var how = "<br><br><span style='font-weight: 900;'>How:</span> ";
+  var next = "<br><br><span style='font-weight: 900;'>Whats Next:</span> ";
+  
+  var respGal = 
+  why
+  + "to design a museum-inspired digital gallery experience that allows multiple images to coexist with latent textual descriptions – that are able to appear without isolating or encroaching on the images"
+  + how
+  + "created a structure of CSS div classes and 800 lines of Javascript functions to add and regulate the interactions between panels of images and their respective descriptions. These used many systems of checks and calculations to have images expand to as large as possible without going off the screen, to determine the method and type of scrolling behavior after the completion of an action, and to figure out the most intuitive and undisruptive location to place the description of an enlarged image."
+  + next
+  + "I hope to work out some more subtle kinks and spin it off into a public GitHub package so other people can use it as well!"
+  + "<br><br><span style='font-weight: 900;'>I’ve used it in the gallery that you are currently viewing!</span>";
 
-  addImagePost('images/planets.png', 'Planets', 'Galactus', desc, '#visual');
-  addImagePost('images/tahu.JPG', 'Tahu', 'Mata Nui', desc, '#visual');
-  addImagePost('images/newt.png', 'Newt', 'Frog', desc, '#visual');
+  var micro =  
+  why
+  + "to create a more simplified and intuitive microwave experience."
+  + how
+  + "worked with a team to (1) Research the current use-cases of microwaves amongst various groups of users (2) Conceptualize a touchscreen interface with simplified options and a unique time-keeping system (3) Design various paper prototypes and mockups (4) Conduct user testing and feedback sessions to create further iterations (5) Present a 2 min pitch for public feedback and criticism."
+  + "<br><br><a href='https://www.youtube.com/watch?v=6DrnK7Flaxc'><span style='font-weight: 900;'>See a 2 minute demo video!</span></a>";
 
-  addImagePost('images/night.jpg', 'Nighttime Monster', 'Godzilla', desc, '#visual');   
-  addImagePost('images/pixar-incredibles-lou-romano-colour-script.jpg', 'This is a really really cool colorscript from the movie the Incredibles', 'Brad Bird', desc, '#visual');
-  addImagePost('images/training_0014_by_sergioxdva-dadcne0.jpg', 'Doesnt this look exactly like a statue?!', 'I am a cool artist', desc, '#visual');
+  var airp = 
+  why
+  + "to provide a simple way for Brown students traveling to and from the Providence airport to find other Brown students to split the cost of an Uber or Lyft with."
+  + how
+  + "worked with a team to flesh out the idea, with an emphasis on making the process as simple and intuitive as possible for a user, while also taking care to not make assumptions that would restrict the webapp to only certain kinds of students. Over the next month, we created a sqlite database of users and their requests and a Java backend to match students and to connect to the Twillio API (to text users updates), flight API (to check flight information to allow scheduling of matching requests and account for delays), and email API (to verify emails for the creation of accounts). Lastly, I created the frontend with HTML/CSS/Javascript of the entire project, again with an emphasis on clarity and conciseness (in terms of words and time)."
+  + next
+  + "we are in the process of finding a suitable server hosting service to host the backend, and aim to release the webapp soon for Brown students to use!";
+
+  var virgw = 
+  why
+  + "to create a central web-accessible portal for Virgo App Inc. employees to see and update customer requests and their status’ in real time, and chat with customers directly."
+  + how
+  + "after settling the structure and contents of the data that would be stored with another developer, I worked in Javascript (as well as a little HTML and CSS) to (1) establish a connection to the data stored in the Firebase ‘realtime database’, (2) implement a secure login system, (3) create a scrolling panel of cards, one per customer request, that would be each assigned a unique ID and updated with every change, (4) a system of buttons and popups that would an employee to update pricing and logistical information specific to a request, and (5) a chat system that would sync through Firebase to allow an employee to chat directly with a customer. I was given a lot of control over the user’s interaction with the webpanel and so developed a system of descriptions, ‘new’ and ‘updated’ card badges, and ‘material design’ inspired shadowed panels and animations to make as clear as possible to employees the relations and connections between components."
+  + next
+  + "some of the general patterns developed here like creating a field of separate request cards with the same structure and rules have continued to be used in later work (like responsiveWebGallery in this case)";
+
+  var virga =
+  why
+  + "to allow consumers  to request household services of any type (like laundry, walking a dog, etc) from trusted small businesses in their vicinity through a mobile app."
+  + how
+  + "worked with another developer to create a 40-screen app from a combination of Swift and the Xcode visual editor. Unlike my other project at Virgo, this had a (fairly) detailed Illustrator mockup set before we started work that served as a guiding hand. Throughout the process of implementing every aspect of the app, from login to messaging, we strived to follow the design templates as closely as possible, while also changing some aspects (after approval) for the sake of a better user experience.";
+
+  var water =
+  why
+  + "to design a resonant visual representation of the global water crisis for the organization B for Water."
+  + how
+  + "depicted the world’s population as a series of water droplets which grew progressively ‘muddier’ with decrease in access to clean water. The stark contrast between the muddy-brown droplets with the clean-white droplets tries to really impress the idea of just how many people around the world don’t have enough or any clean water."
+  + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
+
+  var dent =
+  why
+  + "to bridge the literal and figurative space between poetry and graphics"
+  + how
+  + "worked with a writer to create a graphic poem where the traditional boundaries between text and illustration are blurred. The graphics of the piece encompass the words to reflect and represent the overarching themes of the poem."
+  + "<br><br><span style='font-weight: 900;'>Exhibited at the Granoff Center for Creative Arts in October 2016</span>";
+
+
+
+  addImagePost('images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual');
+  addImagePost('images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
+  addImagePost('images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
+  addImagePost('images/virgoWebappMain.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('images/VirgoAppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
+  addImagePost('images/dental.jpeg', 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
+  addImagePost('images/BforWaterInfog.png', 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
+
+
+
+
+
+  
+
+  // addImagePost('images/spider.jpg', 'Spiderman', 'Peter Parker', desc, '#visual');
+  // addImagePost('images/guard.JPG', 'Guardian', 'Peter Quill', desc, '#visual');
+
+  // addImagePost('images/guard.JPG', 'Guardian2', 'Peter Quill', desc, '#visual');
+
+  // addImagePost('images/planets.png', 'Planets', 'Galactus', desc, '#visual');
+  // addImagePost('images/tahu.JPG', 'Tahu', 'Mata Nui', desc, '#visual');
+  // addImagePost('images/newt.png', 'Newt', 'Frog', desc, '#visual');
+
+  // addImagePost('images/night.jpg', 'Nighttime Monster', 'Godzilla', desc, '#visual');   
+  // addImagePost('images/pixar-incredibles-lou-romano-colour-script.jpg', 'This is a really really cool colorscript from the movie the Incredibles', 'Brad Bird', desc, '#visual');
+  // addImagePost('images/training_0014_by_sergioxdva-dadcne0.jpg', 'Doesnt this look exactly like a statue?!', 'I am a cool artist', desc, '#visual');
    
-  addImagePost('images/rabbit.jpg', 'Rambling Magician of Westerly', 'Bunnicula', desc, '#visual');     
-  addImagePost('images/feathers.jpg', 'A Feathered Beast', 'Trex', desc, '#visual');     
-  addImagePost('images/good.jpg', 'A Good Dinosaur', 'Pixar is the best', desc, '#visual');
+  // addImagePost('images/rabbit.jpg', 'Rambling Magician of Westerly', 'Bunnicula', desc, '#visual');     
+  // addImagePost('images/feathers.jpg', 'A Feathered Beast', 'Trex', desc, '#visual');     
+  // addImagePost('images/good.jpg', 'A Good Dinosaur', 'Pixar is the best', desc, '#visual');
 
   
   
 
   $(".imagePanel").hover(
     function(){ 
-      resizeImageOnHover(this, "105%")},
+      resizeImageOnHover(this, "110%");
+
+
+      // var imgContainer = $(this).find('.imageContainer');
+
+      // // Set imageContainer size to minimizedGallerySize
+      // imgContainer.css( "width", px(minimizedGallerySize * 1.03));
+      // imgContainer.css( "height", px(minimizedGallerySize * 1.03));
+
+      // //$(this).css("margin", px(10- ((minimizedGallerySize * 1.05 - minimizedGallerySize)/2)));
+
+
+      // $(this).animate({ 'margin': px(10-((minimizedGallerySize * 1.03 - minimizedGallerySize)/2))}, 1000);
+
+
+    },
     function(){
-      resizeImageOnHover(this, "100%")});
+      resizeImageOnHover(this, "100%");
+
+      // var imgContainer = $(this).find('.imageContainer');
+
+      // // Set imageContainer size to minimizedGallerySize
+      // imgContainer.css( "width", px(minimizedGallerySize));
+      // imgContainer.css( "height", px(minimizedGallerySize));
+
+      // // $(this).css("margin", px(10));
+      // $(this).animate({ 'margin': px(10)}, 500);
+
+
+    });
 
 
 

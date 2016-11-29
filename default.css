@@ -5,6 +5,12 @@ background color: white
 inactive link: #66666e
 dark: #0a0908
 gold: #ffead0
+
+
+Dark Blue: #1d1e2c;
+Light Gray: #59656f;
+purple: #3b1f2b;
+
 */
 
  
@@ -42,7 +48,7 @@ html, body {
   left: 0px;
   right: 0px;
   background-color: white;
-  padding-top: 3%;
+  padding-top: 2%;
   padding-bottom: 1%;
   z-index: 20;
 
@@ -51,21 +57,22 @@ html, body {
 
 .menu a {
   transition: .3s;
+  font-size: 2vh
 }
 
 .menu a:link, .menu a:visited {
   text-decoration: none;
-  color: #66666e;
+  color: #59656f;
 }
 
 .menu a:hover {
   text-decoration: none;
-  color: #0a0908;
+  color: #db162f;
 }
 
 .menu a:active {
   text-decoration: none;
-  color: #0a0908;
+  color: #db162f;
 }
 
 
@@ -90,15 +97,15 @@ html, body {
 
 
   
-  height: 100%;
+  height: 96%;
 
   /*position: relative;*/
   overflow: hidden;
 
-  /*background-image: url("images/try8.gif");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;*/
+  background-image: url("images/profile3.jpg");
+  /*background-repeat: no-repeat;*/
+  /*background-position: center;*/
+  background-size: cover;
 }
 
 #vid {
@@ -107,17 +114,29 @@ html, body {
 
 #about h1 {
   z-index: 1;
-  
+  color: white;
+  text-align:left;
+
+  font-size: 7vh;
 }
 
-#about h2 {
-  color: #66666e;
-  width: 60%;
+#about h3 {
+  color: white;
+  text-align:left;
+
+  font-size: 2vh;
+}
+
+#about h2, #about a {
+  color: white;
+  /*width: 60%;*/
   text-align:left;
   z-index: 1;
+
+  font-size: 2.5vh
   
 
-  text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
+  /*text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;*/
 }
 
 /*#about img {
@@ -160,17 +179,19 @@ html, body {
   /*display: inline-block;*/
 }
 
-.imagePanel .title {  
+.imagePanel .title { 
+  color: #1d1e2c;
+  font-weight: 900;
   display: inline;
 }
 
 .imagePanel .author {
-  color: #66666e;
+  color: #59656f;
   display: inline;
 }
 
 .imagePanel .description {
-  color: #66666e;
+  color: #3b1f2b;
   text-align: left;
   display: none;
 }
@@ -272,6 +293,27 @@ html, body {
 }
 
 
+/* What this does is set the scrollbar to none, 
+and then manually creates something to look 
+like a scrollbar that will be always visisble!*/
+.imageBlurb::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.imageBlurb::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+.imageBlurb::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+.imageBlurb::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
 
 /*
 .image {
@@ -307,7 +349,7 @@ html, body {
   height: 100%;
 }
 
-#join h4 {
+#join h4, #join a {
   color: #66666e;
   width: 60%;
 }
@@ -321,8 +363,8 @@ html, body {
   left: 0px;
   right: 0px;
   background-color: #0a0908;
-  padding-top: 3%;
-  padding-bottom: 3%;
+  padding-top: 1%;
+  padding-bottom: 1%;
   color: white;
 }
 
