@@ -42,6 +42,18 @@ html, body {
   /*font-family: 'Roboto', sans-serif;*/
 }
 
+
+/* BETA STICKER */
+.sticker {
+  position: absolute;
+  z-index: 21;
+  bottom: 1.2%;
+  right: 20px;
+  font-size: 2vh;
+}
+
+
+
 /* MENU BAR */
 .menu {
   position: fixed;
@@ -58,7 +70,7 @@ html, body {
 
 .menu a {
   transition: .3s;
-  font-size: 2vh
+  font-size: 2vh;
 }
 
 .menu a:link, .menu a:visited {
@@ -68,12 +80,12 @@ html, body {
 
 .menu a:hover {
   text-decoration: none;
-  color: #db162f;
+  color: #5CC8FF;
 }
 
 .menu a:active {
   text-decoration: none;
-  color: #db162f;
+  color: #5CC8FF;
 }
 
 
@@ -98,7 +110,7 @@ html, body {
 
 
   
-  height: 96%;
+  height: 99%;
 
   /*position: relative;*/
   overflow: hidden;
@@ -112,6 +124,21 @@ html, body {
 #vid {
   width: 80%;
 }
+
+
+#intro {
+  position: absolute;
+  bottom: 15%;
+  right: 10%;
+  max-width: 40%;
+}
+
+@media screen and (max-height: 900px) and (max-width: 500px) {
+    #intro {
+      bottom: 8%;
+    }
+}
+
 
 #about h1 {
   z-index: 1;
@@ -128,16 +155,24 @@ html, body {
   font-size: 2vh;
 }
 
-#about h2, #about a {
+#about h2 {
   color: white;
   /*width: 60%;*/
   text-align:left;
   z-index: 1;
 
-  font-size: 2.5vh
-  
+  font-size: 2.5vh;
+}
 
-  /*text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;*/
+#about a {
+  transition: .3s;
+  color: white;
+  font-size: 2.5vh;
+  text-decoration:none;
+}
+
+#about a:hover, #about a:active {
+  color: #5CC8FF;
 }
 
 /*#about img {
@@ -151,8 +186,8 @@ html, body {
 /* VISUAL */
 #visual {
 
-
-
+/*  background-color: #E83F6F;
+*/
   /*should allow centering properly but needs tuning*/
   /*background-color: white;
   display: flex;
@@ -232,10 +267,11 @@ html, body {
   position: absolute;
   top: -10px;
   left: 0px;
-  color: #ffead0;
+  color: #93867F;
   font-size: 2.4em;
 
-  opacity:.5;
+  /*opacity:.5;*/
+  opacity:.8;
 
   background-color: Transparent;
   border: none;
@@ -316,7 +352,7 @@ like a scrollbar that will be always visisble!*/
 .imageBlurb::-webkit-scrollbar-thumb {
     border-radius: 8px;
     border: 2px solid white; /* should match background, can't be transparent */
-    background-color: rgba(0, 0, 0, .5);
+    background-color: #59656f;
 }
 
 
@@ -351,14 +387,23 @@ like a scrollbar that will be always visisble!*/
 
 
   background-color: white;
-  height: 100%;
+  height: 88%;
 }
 
-#join h4, #join a {
+#join h4 {
   color: #66666e;
   width: 60%;
 }
 
+#join a {
+  color: #66666e;
+  text-decoration:none;
+  transition: .3s;
+}
+
+#join a:hover, #join a:active {
+  color: #5CC8FF;
+}
 
 
 
@@ -369,11 +414,18 @@ like a scrollbar that will be always visisble!*/
   right: 0px;
   background-color: #0a0908;
   padding-top: 2%;
-  padding-bottom: 2%;
+  padding-bottom: 3%;
   color: white;
 }
 
+.credits a{
+  color: #66666e;
+  text-decoration:none;
+}
 
+.credits a:hover, .credits a:active {
+  color: #5CC8FF;
+}
 
 
 

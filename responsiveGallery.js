@@ -1,5 +1,5 @@
 /* ISSUES TO FIX:
-  - when webpage is resized, the expanded panel should reload
+ 
   - try to have images expand and shrink such that the page isnt scrolled at all but the image remains visible on screen
   - bug when click on expanded image again, sometimes only title and author, but not description show up
   - Have gifs play only on mouseover: 
@@ -11,11 +11,13 @@
       ezgif.com
   – 'scroll for more' tag in long descriptions
   _ when hover, have not just image expand, but the image container and padding decrease for a more dynamic feel
+  - havent considered devices in landscape
 
 
 
    FIXED
    - hypen of title to author is now no present in expanded version
+    - when webpage is resized, the expanded panel should reload
 */
 
 var expandedPanel = null;
@@ -164,7 +166,7 @@ $(document).on('click','.close',function(evt){
   entity - an imagePanel
 */
 function convertBlurbStyle(entity) {
-  entity.find('.title').css({'font-size': '25px',
+  entity.find('.title').css({'font-size': '20px',
                              'text-align': 'center',
                              'display': 'block'});
   entity.find('.author').css({'font-size': '12px',
@@ -216,6 +218,10 @@ $(window).resize(function() {
     globalResizeTimer = window.setTimeout(function() {
         // NOTE: CODE BELOW IS DIRECTLY COPIED AND MODIFIED FROM BELOW -- MAKE A PROPER HELPER FUNCTION THAT EXPANDS PANELS INSTEAD THAT BOTH OF THOSE CAN CALL
         
+
+        if (expandedPanel == null) { return;}
+
+
         currPanel = expandedPanel;
 
         shrinkImage();
@@ -900,9 +906,12 @@ function scrollTo(entity, timeout) {
     // }
 
     if (!$(e.target).closest('.imagePanel').length) {
-      var scrollTo = expandedPanel;
-      shrinkImage();
-      scrollToTopOfEntity(scrollTo);
+
+      if( $(window).width() >= 412 && $(window).height() >= 737 ) { // is not mobile
+        var scrollTo = expandedPanel;
+        shrinkImage();
+        scrollToTopOfEntity(scrollTo);
+      }
     }
 
 
