@@ -12,6 +12,8 @@
   – 'scroll for more' tag in long descriptions
   _ when hover, have not just image expand, but the image container and padding decrease for a more dynamic feel
   - havent considered devices in landscape
+  - have images animate only when hovering
+  - line break bullet points in descriptions
 
 
 

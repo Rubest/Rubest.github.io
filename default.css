@@ -419,12 +419,12 @@ like a scrollbar that will be always visisble!*/
 }
 
 .credits a{
-  color: #66666e;
+  color: #5CC8FF;
   text-decoration:none;
 }
 
 .credits a:hover, .credits a:active {
-  color: #5CC8FF;
+  color: #66666e;
 }
 
 
