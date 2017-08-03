@@ -119,6 +119,8 @@ html, body {
   /*background-repeat: no-repeat;*/
   /*background-position: center;*/
   background-size: cover;
+
+  background-attachment: fixed; /*Makes image not move while scrolling*/
 }
 
 #vid {
@@ -194,6 +196,8 @@ html, body {
   flex-direction: column;
   align-items: center;*/ /* horizontally aligns items */
 
+  padding-left: 100px;
+  padding-right: 100px;
 }
 
 /*Also needed for centering but needs tuning*/
@@ -232,6 +236,10 @@ html, body {
   display: none;
 }
 
+.imagePanel .hiddenInfo {
+  display: none;
+}
+
 .imagePanel a {
   color: #59656f;
 }
@@ -240,8 +248,11 @@ html, body {
   width: 300px;
   height: 300px;
   overflow: hidden;
-  transition: 1.4s;
+  /*transition: 1.4s;*/
   position: relative;
+
+  -webkit-transition: all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition:         all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 
 
   /*display: inline-block;
@@ -251,7 +262,11 @@ html, body {
 .imageContainer img {
   /*width: 100%;
   height: auto;*/
-  transition: 1.4s;
+  /*transition: 1.4s;*/
+
+  -webkit-transition: all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition:         all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+
 
   position: absolute;
   top: -9999px;
@@ -309,7 +324,7 @@ html, body {
 
 .imageBlurb {
   position: absolute;
-  width: 280px;
+  width: 300px;
   max-height: 280px;
   overflow: scroll;
   background-color: white;
@@ -319,6 +334,7 @@ html, body {
 .imageBlurb .title { 
   font-size: 25px;
   text-align: center;
+  font-weight: 900;
 }
 
 .imageBlurb .author {

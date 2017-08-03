@@ -5,6 +5,7 @@
   - Have gifs play only on mouseover: 
       https://github.com/ctrl-freaks/freezeframe.js/
       http://stackoverflow.com/questions/5818003/stop-a-gif-animation-onload-on-mouseover-start-the-activation
+      https://github.com/krasimir/gifffer
   - Animations:
       http://valhead.com/2013/03/11/animation-play-state/
   - Videos to gifs:
@@ -14,12 +15,37 @@
   - havent considered devices in landscape
   - have images animate only when hovering
   - line break bullet points in descriptions
+  - before image is finished loading, load a colorful background! (rather than the currently white square) (gooogle images does this)
 
 
 
    FIXED
    - hypen of title to author is now no present in expanded version
     - when webpage is resized, the expanded panel should reload
+    Dec 29, 2016
+    - changed width of the floating image blurb to properly take up all the availiable space allocated for it.
+
+
+    - Huge improvements to scrolling after an element has been minimized, depending on specific cases
+  
+    Mar 20, 2017
+    - cover image is now static and doesnt scroll even if the page does! This doesnt change much but seems to make things a little more dynamic
+    - Images now do not fill the full screen, and instead expand to up to two times the size of the minimized elements
+    - detection of the space around an element is better, more accurately checking the spacing below and to the side
+    - Now there is an option for providing different images for the minimized state and the maximized state, to allow arrangments like: static image when minimized starts moving once you click on it, or low res image becomes higher res when you click on it -- the intent is to provide a way to allow smaller file sizes (so that the whole page isnt slow) and to make it so that certain elements arent distracting
+    - added the pysadelic poster and trex
+    - made it so that the minimzed image of the microwave is centered so that it looks nice when minimized, and this is switched out with the proper one (which has the buttons slightly offcenter) once maximized. This causes a slight jerk, but it seems small enough that its worth it?
+    
+    July 18, 2017
+    - Used this awesome website: http://easings.net/
+      to add easing to the transitions of both the image panels (expanding, etc) and images (expanding on hover, etc) for a much more natural look!
+    - added left and right padding to #visual div so that image panels never touch the sides of the browser and theres 
+      always whitespace between the edge of the browser window and the panels
+    - 
+
+
+
+
 */
 
 var expandedPanel = null;
@@ -58,14 +84,19 @@ function wait(ms){
 //______________________________________________________________________________________________
 
 /* Adds an image and its details to the page
-  imgURL - url to the image or gif to place
+  staticImgURL - a still/static url to the image or gif to place
+  dynamicImgURL - a moving/dynamic url to the image or gif (if none, simply repeat the staticImgURL)
   title - (unique) title of the image
   author - author of image
   description - description or text of image
   containerClass - the class of the div to hold this image 
 */
-function addImagePost(imgURL, title, author, description, containerClass) {
+function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass) {
   var errorMessage = 'A problem occured with displaying the image';
+
+  if (dynamicImgURL == null) {
+    dynamicImgURL = staticImgURL;
+  }
 
   // create a unique id from the title of the image (might be a bad idea to depend on titles being unique)
   var id = title.replace(/\s|\W/g, '');
@@ -75,13 +106,17 @@ function addImagePost(imgURL, title, author, description, containerClass) {
       "<div class='imagePanel' id='" + id + "'>"
     +   "<div class='imageContainer'>"
     +     "<button class='close'> &times </button>"
-    +     "<img src='" + imgURL + "' alt='" + errorMessage + "'>"
+    +     "<img src='" + staticImgURL + "' alt='" + errorMessage + "'>"
     +   "</div>"
     +   "<div class='text'>"
     +     "<div class='title'>" + title + "</div>"
     +     "<span class='divider'> | </span>"
     +     "<div class='author'>" + author + "</div>"
     +     "<div class='description'>" + description + "</div>"
+    +   "</div>"
+    +   "<div class='hiddenInfo'>"
+    +     "<div class='staticImg'>" + staticImgURL + "</div>"
+    +     "<div class='dynamicImg'>" + dynamicImgURL + "</div>"
     +   "</div>"
     + "</div>"
     );
@@ -110,7 +145,7 @@ function addImagePost(imgURL, title, author, description, containerClass) {
 };
 
 /* Shrinks the currently expanded imagePanel (if any) down to the minimizedGallerySize
-  (The expaned image, if it exists, is expected to be saved in the expandedPanel global variable)
+  (The expanded image, if it exists, is expected to be saved in the expandedPanel global variable)
 */
 function shrinkImage() {
   
@@ -142,6 +177,8 @@ function shrinkImage() {
     unconvertBlurbStyle(expandedPanel)
     expandedPanel.find('.close').hide(1400);
     
+    //TEST TEST TEST TEST
+setGifToStatic(expandedPanel);
 
     // Set expanded panel to null
     expandedPanel = null;
@@ -202,6 +239,26 @@ function unconvertBlurbStyle(entity) {
 
 }
 
+
+
+function setGifToStatic(entity) {
+  // Find the link to the static version of the image
+  staticImg = entity.find('.staticImg').html();
+
+  // Find and change the image currently on display
+  img = entity.find('.imageContainer img');
+  img.attr("src", staticImg);
+}
+
+
+function setGifToDynamic(entity) {
+  // Find the link to the static version of the image
+  dynamicImg = entity.find('.dynamicImg').html();
+
+  // Find and change the image currently on display
+  img = entity.find('.imageContainer img');
+  img.attr("src", dynamicImg);
+}
 
 
 
@@ -308,10 +365,11 @@ function scrollToTopOfEntity(entity) {
     }
   }
 
+  // THIS PORTION STILL ISNT BEHAVING CORRECTLY
   if (!spaceExistsToLeftOrRight(entity)
     && topOfEntityRelativeToWindow <= - minimizedTotalHeight
     && topOfEntityRelativeToWindow >= - entity.outerHeight()) {
-    // There is space to side (aka other imagePanels are there) and the entity is partially off the screen from the top, but still visible
+    // There is no space to side (aka other imagePanels are there) and the entity is partially off the screen from the top, but still visible
 
     var heightOfVisiblePortion = topOfEntityRelativeToWindow + entity.outerHeight();
 
@@ -341,6 +399,17 @@ function scrollToTopOfEntity(entity) {
     // We want to scroll enough to offset the shrinking of the large image, but also scroll up extra to account for the shrunk image merging with another row of images
     $('body, html').animate({scrollTop: scrolledDistFromTop - entity.outerHeight() - minimizedTotalHeight});
   }
+
+
+
+/* Right now possibly not accounting for:
+   - entity with panels to its sides shrinking, and when it shrinks, it merges with a row above, meaning that we should scroll up more than we do currently (how do we check if an image would run into that? could we check the space to the right of the previous element?)
+   - same problem with images with no space to the side
+   - i dont remember if the description shrinking (when it is below) is accounted for in the scroll offsetting
+
+*/
+
+
 
 
 //// This old version of code simply scrolled to the top of the entity
@@ -380,7 +449,9 @@ function spaceExistsUnderCollapsedPanel(entity) {
   var spaceCollapsedPanelTakesUp = minimizedGallerySize + marginBorderSize + 0.5 * marginBorderSize; //(to account for text underneath - need a better safe way to do this though)
   var spaceForDescriptionToTakeUp = minimizedGallerySize + marginBorderSize; // in the future this might want to be an input value so that size can depend on description length
 
-  var totalHeightOfNonImagePanelArea = screenHeight - spaceCollapsedPanelTakesUp;
+  // var totalHeightOfNonImagePanelArea = screenHeight - spaceCollapsedPanelTakesUp;
+  var totalHeightOfNonImagePanelArea = entity.find('.imageContainer img').height() - spaceCollapsedPanelTakesUp;
+
 
   p("-- Is there space below?");
   p("screenHeight: " + screenHeight);
@@ -477,6 +548,7 @@ function setDescriptionToRight(entity) {
                                       'vertical-align': 'top'});
   entity.find('.text').css({'display': 'inline-block',
                             'margin-left': '20px'});
+
   convertBlurbStyle(entity);
 }
 
@@ -616,15 +688,30 @@ $(document).ready(function() {
   + "worked with a writer to create a graphic poem where the traditional boundaries between text and illustration are blurred. The graphics of the piece encompass the words to reflect and represent the overarching themes of the poem."
   + "<br><br><span style='font-weight: 900;'>Exhibited at the Granoff Center for Creative Arts in October 2016</span>";
 
+  var psych = 
+  why
+  + "to design a poster to advertise a performance at the Hamilton House for Adult Learning Exchange for senior citizens"
+  + how
+  + "researched 60s era San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities and the 'if people care enough, they’ll lean in and look closer' (Wes Wilson) philosophy associated with psychedelic art, while trying to strike a balance with modern design focus on readibility and simplicity. After 52 distinct iterations in Illustrator, ended up with two final versions."
+  + "<br> <br> <img src='images/HamiltonHousePoster.svg' alt='' style='max-width:100%;max-height:100%;'>"
+
+  // “psychedelic” is a combination of the Greek words psyche and delos, and means “mind manifesting” or “soul manifesting.”
 
 
-  addImagePost('images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual');
-  addImagePost('images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
-  addImagePost('images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
-  addImagePost('images/virgoWebappMain.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('images/AppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
-  addImagePost('images/dental.jpeg', 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
-  addImagePost('images/BforWaterInfog.png', 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
+  addImagePost('images/responsiveGalleryGifStatic.gif', 'images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual');
+  // addImagePost('images/microwaveRedesign.png', null, 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
+  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
+  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
+  addImagePost('images/virgoWebappMain.png', null, 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('images/AppMainStatic.gif', 'images/AppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
+  addImagePost('images/dental.svg', null, 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
+  addImagePost('images/HamiltonHousePosterVer2.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual');
+  addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
+  // addImagePost('images/RoomMuralPhoto.jpg', null, 'Wall Redesign', 'representing a global crisis', water, '#visual');
+
+
+  // experimental
+  // addImagePost('images/trexFrameB.png', null, 'T-Rex', 'psuedo-3D sculpture', water, '#visual');
 
 
   
@@ -653,6 +740,8 @@ $(document).ready(function() {
     function(){ 
       resizeImageOnHover(this, "110%");
 
+      // $(this).find('.text').css("opacity", 1);
+
 
       // var imgContainer = $(this).find('.imageContainer');
 
@@ -669,6 +758,8 @@ $(document).ready(function() {
     },
     function(){
       resizeImageOnHover(this, "100%");
+
+      // $(this).find('.text').css("opacity", 0.6);
 
       // var imgContainer = $(this).find('.imageContainer');
 
@@ -705,6 +796,15 @@ $(document).ready(function() {
       img.css( "width", "100%" );
     }
 
+
+    // attempt at seeing if clicked area is inside the currently expanded area
+    // if (expandedPanel != null && $.contains(expandedPanel, $(this))) {
+
+    //   p("curr expanded contains clicked element!")
+    //   return;
+    // }
+
+
     // if ($(this) == expandedPanel) {
     //   return;
     // }
@@ -721,7 +821,7 @@ $(document).ready(function() {
     var marginBorders = 2 * parseInt($(this).css("marginRight").replace('px', ''));
 
 
-    var arbitrarySizeBoundry = Infinity;//minimizedGallerySize * 2
+    var arbitrarySizeBoundry = minimizedGallerySize * 2;
 
 
     // //expandedPanel.find('.description').show();
@@ -799,7 +899,8 @@ $(document).ready(function() {
     }
 
 
-
+    // Set the image to be dynamic
+    setGifToDynamic($(this));
 
 
     // if (imgHeight > imgWidth) {
@@ -846,7 +947,7 @@ $(document).ready(function() {
     setTimeout(function() {
 
       if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-        placeDescription(expandedPanel, "left", "below")
+        placeDescription(expandedPanel, "left", "below");
       } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
         placeDescription(expandedPanel, "right", "below");
       } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
@@ -872,6 +973,9 @@ $(document).ready(function() {
 
 
   });
+
+
+
 
 
 function scrollTo(entity, timeout) {
