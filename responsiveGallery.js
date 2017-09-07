@@ -44,12 +44,31 @@
     - 
 
 
+    August 22, 2017
+    - Prevented imagePanels from expanding again if they were already expanded and then clicked (was especially annoying on mobile because 
+      attempting to just scroll would make the currently expanded image and text shrink and expand again!)
+    - Introduced some global const values
+    - Now description is set and page is scroll both when a panel is clicked, and after it has finished expanding.
+      This means that the description appears much quicker and usually the earlier scroll is enough, meaning that things seems a lot faster and less laggy.
+      The downside though is that sometimes the early scroll overcompensates when another panel is being shrunk simultaneously, which is unideal
+    - Set description to be hidden immediately upon closing (rather than over some ms), which allows a much faster and cleaner shrinking of image panels
+
+    September 6, 2017
+    - Updated the Psychedelic poster from the straight edges to the jagged edges, removed the alternate final version, and replaced it with the timeline of all the iterations of the poster.
+
+
+
+
+
 
 
 */
 
 var expandedPanel = null;
-var minimizedGallerySize = 300; // (in px)
+const minimizedGallerySize = 300; // (in px)
+const closeTime = 1400;
+const openTime = 1400;
+const delayTime = 1400;
 
 
 //______________________________________________________________________________________________
@@ -175,7 +194,7 @@ function shrinkImage() {
     
     $('.imageBlurb').hide(100);
     unconvertBlurbStyle(expandedPanel)
-    expandedPanel.find('.close').hide(1400);
+    expandedPanel.find('.close').hide(closeTime);
     
     //TEST TEST TEST TEST
 setGifToStatic(expandedPanel);
@@ -222,7 +241,7 @@ function convertBlurbStyle(entity) {
 */
 function unconvertBlurbStyle(entity) {
   $('.text').show();
-  entity.find('.description').hide(1400);
+  entity.find('.description').hide(0);
   entity.find('.divider').show(); 
 
 
@@ -278,51 +297,51 @@ $(window).resize(function() {
         // NOTE: CODE BELOW IS DIRECTLY COPIED AND MODIFIED FROM BELOW -- MAKE A PROPER HELPER FUNCTION THAT EXPANDS PANELS INSTEAD THAT BOTH OF THOSE CAN CALL
         
 
-        if (expandedPanel == null) { return;}
+        // if (expandedPanel == null) { return;}
 
 
-        currPanel = expandedPanel;
+        // currPanel = expandedPanel;
 
-        shrinkImage();
+        // shrinkImage();
 
-        expandedPanel = currPanel;
-        expandedPanel.find('.text').hide();
+        // expandedPanel = currPanel;
+        // expandedPanel.find('.text').hide();
 
-        var imgHeight = expandedPanel.find('.imageContainer img').height();
-        var imgWidth = expandedPanel.find('.imageContainer img').width();
+        // var imgHeight = expandedPanel.find('.imageContainer img').height();
+        // var imgWidth = expandedPanel.find('.imageContainer img').width();
 
-        var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
+        // var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
 
-        var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
-        var maxWidth = $(window).width() - marginBorders;
-        var newWidth = maxHeight * imgWidth / imgHeight;
-        var newHeight = maxWidth * imgHeight / imgWidth;
+        // var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
+        // var maxWidth = $(window).width() - marginBorders;
+        // var newWidth = maxHeight * imgWidth / imgHeight;
+        // var newHeight = maxWidth * imgHeight / imgWidth;
 
-        if (newWidth < maxWidth) {
-          expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
-          expandedPanel.find('.imageContainer').css( "width", px(newWidth));
+        // if (newWidth < maxWidth) {
+        //   expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
+        //   expandedPanel.find('.imageContainer').css( "width", px(newWidth));
 
-        } else {
-          expandedPanel.find('.imageContainer').css( "height", px(newHeight));
-          expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
-        }
+        // } else {
+        //   expandedPanel.find('.imageContainer').css( "height", px(newHeight));
+        //   expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
+        // }
 
-        expandedPanel.find('.close').show(1400);
+        // expandedPanel.find('.close').show(openTime);
 
-        setTimeout(function() {
-          if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-            placeDescription(expandedPanel, "left", "below")
-          } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-            placeDescription(expandedPanel, "right", "below");
-          } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-            setDescriptionToRight(expandedPanel);
-          } else {
-            setDescriptionToBottom(expandedPanel);
-          }
+        // setTimeout(function() {
+        //   if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+        //     placeDescription(expandedPanel, "left", "below")
+        //   } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+        //     placeDescription(expandedPanel, "right", "below");
+        //   } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
+        //     setDescriptionToRight(expandedPanel);
+        //   } else {
+        //     setDescriptionToBottom(expandedPanel);
+        //   }
 
-          //scrollTo(expandedPanel, 0);
+        //   //scrollTo(expandedPanel, 0);
 
-        }, 1400);
+        // }, delayTime);
 
 
     }, 200);
@@ -686,14 +705,16 @@ $(document).ready(function() {
   + "to bridge the literal and figurative space between poetry and graphics"
   + how
   + "worked with a writer to create a graphic poem where the traditional boundaries between text and illustration are blurred. The graphics of the piece encompass the words to reflect and represent the overarching themes of the poem."
-  + "<br><br><span style='font-weight: 900;'>Exhibited at the Granoff Center for Creative Arts in October 2016</span>";
+  + "<br><br><span style='font-weight: 900;'>Exhibited at the Granoff Center for Creative Arts in October 2016</span>"
+  + "<br> <br> My initial pitch and sketch: <img src='images/DentalPitch.png' alt='' style='max-width:100%;max-height:100%;'>";
+
 
   var psych = 
   why
   + "to design a poster to advertise a performance at the Hamilton House for Adult Learning Exchange for senior citizens"
   + how
-  + "researched 60s era San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities and the 'if people care enough, they’ll lean in and look closer' (Wes Wilson) philosophy associated with psychedelic art, while trying to strike a balance with modern design focus on readibility and simplicity. After 52 distinct iterations in Illustrator, ended up with two final versions."
-  + "<br> <br> <img src='images/HamiltonHousePoster.svg' alt='' style='max-width:100%;max-height:100%;'>"
+  + "researched 60s era San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities and the 'if people care enough, they’ll lean in and look closer' (Wes Wilson) philosophy associated with psychedelic art, while trying to strike a balance with modern design focus on readibility and simplicity. Ended up with the final version after 59 distinct iterations in Illustrator:"
+  + "<br> <br> <img src='images/HamiltonHousePosterTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
 
   // “psychedelic” is a combination of the Greek words psyche and delos, and means “mind manifesting” or “soul manifesting.”
 
@@ -705,7 +726,7 @@ $(document).ready(function() {
   addImagePost('images/virgoWebappMain.png', null, 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
   addImagePost('images/AppMainStatic.gif', 'images/AppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
   addImagePost('images/dental.svg', null, 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
-  addImagePost('images/HamiltonHousePosterVer2.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual');
+  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual');
   addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
   // addImagePost('images/RoomMuralPhoto.jpg', null, 'Wall Redesign', 'representing a global crisis', water, '#visual');
 
@@ -797,12 +818,11 @@ $(document).ready(function() {
     }
 
 
-    // attempt at seeing if clicked area is inside the currently expanded area
-    // if (expandedPanel != null && $.contains(expandedPanel, $(this))) {
-
-    //   p("curr expanded contains clicked element!")
-    //   return;
-    // }
+    // If the clicked image panel was already expanded, we don't want to shrink and enlarge again!
+    if (expandedPanel != null && expandedPanel.is($(this))) {
+      console.warn("current expanded panel contains clicked element!")
+      return;
+    }
 
 
     // if ($(this) == expandedPanel) {
@@ -941,30 +961,57 @@ $(document).ready(function() {
 // COMMENTED TO MAKE CODE DEV EASIERRRRR
 // PLEASE UNCOMMET SOOONN:
     
-    expandedPanel.find('.close').show(1400);
-    //expandedPanel.find('.description').show(1400);
+    expandedPanel.find('.close').show(openTime);
+    //expandedPanel.find('.description').show(openTime);
 
-    setTimeout(function() {
 
-      if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-        placeDescription(expandedPanel, "left", "below");
-      } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-        placeDescription(expandedPanel, "right", "below");
-      } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-        setDescriptionToRight(expandedPanel);
-      } else {
-        setDescriptionToBottom(expandedPanel);
-      }
+    // setTimeout(function() {
 
-      p(spaceExistsToLeftOrRight(expandedPanel));
-      p(spaceExistsUnderCollapsedPanel(expandedPanel));
+    //   if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+    //     placeDescription(expandedPanel, "left", "below");
+    //   } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+    //     placeDescription(expandedPanel, "right", "below");
+    //   } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
+    //     setDescriptionToRight(expandedPanel);
+    //   } else {
+    //     setDescriptionToBottom(expandedPanel);
+    //   }
 
-      p(isThereSpaceOnTheLeft(expandedPanel));
-      p(isThereSpaceOnTheRight(expandedPanel));
+    //   p(spaceExistsToLeftOrRight(expandedPanel));
+    //   p(spaceExistsUnderCollapsedPanel(expandedPanel));
 
-      scrollTo(expandedPanel, 0);
+    //   p(isThereSpaceOnTheLeft(expandedPanel));
+    //   p(isThereSpaceOnTheRight(expandedPanel));
 
-    }, 1400);
+    //   scrollTo(expandedPanel, 0);
+
+    // }, delayTime);
+
+
+
+    const totalOpenTime = 1400;
+    const constDelay = 100;
+    // const iterations = 10;
+    // const timeStep = totalOpenTime / iterations;
+
+    for (var x = 0; x < 2; x++) {
+      window.setTimeout(function() {
+        if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+          placeDescription(expandedPanel, "left", "below");
+        } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
+          placeDescription(expandedPanel, "right", "below");
+        } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
+          setDescriptionToRight(expandedPanel);
+        } else {
+          setDescriptionToBottom(expandedPanel);
+        }
+
+        // setDescriptionToRight(expandedPanel);
+
+        scrollTo(expandedPanel, 0);
+      }, (totalOpenTime * x) + constDelay);
+    }
+
 
 
 
