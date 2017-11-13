@@ -57,6 +57,12 @@
     - Updated the Psychedelic poster from the straight edges to the jagged edges, removed the alternate final version, and replaced it with the timeline of all the iterations of the poster.
     - Added the initial sketch for dental
 
+    September 22, 2017
+    - Updated the Virgo iOS app image and gif to be much higher quality and nice
+
+    November 13, 2017
+    - Updated the Virgo Webpanel image and gif to be much better — now there is an actual gif, and there's no weird debugging text in the images shown anymore! (took many hours to get it proper)
+    - Created new panel for the BMSA brochure! Tested maybe 15-20 possible arrangements before settling in with the current displays! Also wrote a blurb based on earlier drafting and added pictures of the brochure in real life and the old brochure!
 
 
 
@@ -711,6 +717,17 @@ $(document).ready(function() {
   + "<br> <br> My initial pitch and sketch: <img src='images/DentalPitch.png' alt='' style='max-width:100%;max-height:100%;'>";
 
 
+  var bmsa =
+  why
+  + "to create a brochure for the Brown Muslim Students Association that would be friendly, informative, and professional"
+  + how
+  + "first worked to identify the most salient info that new people would benefit from, and organized the information into digestible chunks to be easily scanned. This simplification and logical grouping of information was important because not everyone would intend to read through every word, and might be looking for only specific information or just a general sense of the organization. <br>Accessible language and the font quicksand (despite it being somewhat cliche to use) were used specifically to further a sense of friendliness. <br> All the graphics and words used were created from scratch by me, with the exception of the satellite image from Google Maps."
+  + "<br> <br> A test print: <img src='images/bmsaBrochurePrinted.jpg' alt='' style='max-width:100%;max-height:100%;'>"
+  + "<br> <br> Previous version of the brochure for reference: <br> <img src='images/bmsaOldBrochurePg1.png' alt='' style='max-width:50%;max-height:100%;'><img src='images/bmsaOldBrochurePg2.png' alt='' style='max-width:50%;max-height:100%;'>";
+
+
+
+
   var psych = 
   why
   + "to design a poster to advertise a performance at the Hamilton House for Adult Learning Exchange for senior citizens"
@@ -725,11 +742,39 @@ $(document).ready(function() {
   // addImagePost('images/microwaveRedesign.png', null, 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
   addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
   addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
-  addImagePost('images/virgoWebappMain.png', null, 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('images/AppMainStatic.gif', 'images/AppMain.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
+  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
+  addImagePost('images/bmsaMap.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual');
+
   addImagePost('images/dental.svg', null, 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
   addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual');
   addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
+
+
+
+/*
+  addImagePost('/Users/Rume/Desktop/webstill1.png', '/Users/Rume/Desktop/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/webstill2.png', '/Users/Rume/Desktop/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+
+
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-09.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-13.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-12.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-15.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-14.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/Brochure Redesign-09.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/broc.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/broccover.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+
+  addImagePost('/Users/Rume/Desktop/1.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/2.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/3.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/4.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+  addImagePost('/Users/Rume/Desktop/5.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+
+*/
+
+
   // addImagePost('images/RoomMuralPhoto.jpg', null, 'Wall Redesign', 'representing a global crisis', water, '#visual');
 
 
