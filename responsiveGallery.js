@@ -1,5 +1,29 @@
+
+
+
+
+
 /* ISSUES TO FIX:
  
+  - eliminate any font issues by vectorizing any fonts
+  - Refine/Create descriptions
+  - reduce quality of shrunken images even more to lower page load times and latency
+  - disable ability to right-click on a shrunken imagePanel (https://swisnl.github.io/jQuery-contextMenu/demo/disabled-menu.html#example-code)
+  - Mobile friendly
+  - tags and filtering
+  - zooming/multiple images/gifs
+  - Corrent automated scrolling in cases where the margin change effects stuff
+  - Paralax scrolling
+  - consider eliminating header entirely or making it disappear
+  - mobile scrolling
+  - mobile expanding of images
+  - mobile context menu
+
+  - Update older imagepanel Descriptions
+  - figure out something for while the higher resolution image is loading
+
+
+
   - try to have images expand and shrink such that the page isnt scrolled at all but the image remains visible on screen
   - bug when click on expanded image again, sometimes only title and author, but not description show up
   - Have gifs play only on mouseover: 
@@ -18,9 +42,14 @@
   - before image is finished loading, load a colorful background! (rather than the currently white square) (gooogle images does this)
 
 
+  
+  - Change color of close button to be more obvious
+  - Possibly move close button to the now-colored text area, to the top right corner, where it might make more sense anyway
+
+
 
    FIXED
-   - hypen of title to author is now no present in expanded version
+    - hypen of title to author is now no present in expanded version
     - when webpage is resized, the expanded panel should reload
     Dec 29, 2016
     - changed width of the floating image blurb to properly take up all the availiable space allocated for it.
@@ -64,6 +93,19 @@
     - Updated the Virgo Webpanel image and gif to be much better — now there is an actual gif, and there's no weird debugging text in the images shown anymore! (took many hours to get it proper)
     - Created new panel for the BMSA brochure! Tested maybe 15-20 possible arrangements before settling in with the current displays! Also wrote a blurb based on earlier drafting and added pictures of the brochure in real life and the old brochure!
 
+    Jan 18, 2019
+    - Fixed bug with margin-left being still applied after panel was shrunk
+    - Restyled expanded text significantly to have more visual hierarchy and to more clearly be visually connected to the art piece
+    - Switched to using CSS for some previously manually set values for cleaner code
+    - Deleting imageBlurb code and functionality
+    - Pointer cursor is shown now when hovering on reduced imagePanel (to show that image is clickable)
+    - Scrolling is now disabled when expanding or reducing images to reduce potential for disorientation
+    - cleaned up logic around background-colors of ImagePanel components to use css better
+    - Upon initial page-load, there are now colorful squares on the screen that are filled by the images as they load (rather than the empty space they were before)
+    - Fixed the problem of the unexplained right-side whitespace on mobile. (was text overflow of the intro, so set overflow to hidden for now)
+    - Set #visual padding so that it is not used on mobile, should mean that there are no wierd size issues
+    - Added a few more important entries
+    - Removed fixed position of menu-bar and set image-panels to scroll to the real top of the screen (rather than being offset by menu-bar height). Also though left the menu-bar height buffer in the calculation of the image height
 
 
 
@@ -73,10 +115,21 @@
 */
 
 var expandedPanel = null;
-const minimizedGallerySize = 300; // (in px)
+const REDUCED_IMAGE_SIZE = 300; // (in px)
+const maximumExpandedHeight = REDUCED_IMAGE_SIZE * 3;
+const maximumExpandedWidth = REDUCED_IMAGE_SIZE * 2;
 const closeTime = 1400;
 const openTime = 1400;
 const delayTime = 1400;
+
+
+const REDUCED_MARGIN_SIZE = 10; // (in px)
+const APPROX_REDUCED_TEXT_HEIGHT = 2 * REDUCED_MARGIN_SIZE // (in px); Approx because this already not exact and there can be 1 line of text or it can be wrapped to multiple lines
+const EXPANDED_MARGIN_TOP_SIZE = 40; // (in px)
+const ARBITRARY_SLIGHT_EXTRA_SCROLL = 40;
+
+const REDUCED_CLASS = 'reduced';
+const EXPANDED_CLASS = 'expanded';
 
 
 //______________________________________________________________________________________________
@@ -86,7 +139,12 @@ const delayTime = 1400;
 
 // Simple function to print something to the console
 function p(strg) {
-    console.log(strg);
+    // console.log(strg);
+}
+
+// Simple function to print a warning to the console
+function w(strg) {
+    console.warn(strg);
 }
 
 // Converts an integer input to a value in pixels
@@ -103,6 +161,9 @@ function wait(ms){
   }
 }
 
+function isExpanded(entity) {
+  return entity.hasClass(EXPANDED_CLASS);
+}
 
 
 //______________________________________________________________________________________________
@@ -117,8 +178,9 @@ function wait(ms){
   author - author of image
   description - description or text of image
   containerClass - the class of the div to hold this image 
+  backgroundColor - of panel when expanded
 */
-function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass) {
+function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass, backgroundColor) {
   var errorMessage = 'A problem occured with displaying the image';
 
   if (dynamicImgURL == null) {
@@ -130,9 +192,16 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
 
   // add image to container div
   $(containerClass).append(
-      "<div class='imagePanel' id='" + id + "'>"
+      // "<div class='imagePanel reduced' id='" + id + "'>"
+
+      "<div class='imagePanel reduced' id='" + id + "' style='background-color:" + backgroundColor + "'>"      
+    +   "<button class='close'> &times </button>"
     +   "<div class='imageContainer'>"
-    +     "<button class='close'> &times </button>"
+
+// //Experimental
+//     +   "<div class='imageContainer' style='outline-color:" + backgroundColor + "'>"
+
+
     +     "<img src='" + staticImgURL + "' alt='" + errorMessage + "'>"
     +   "</div>"
     +   "<div class='text'>"
@@ -144,11 +213,15 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
     +   "<div class='hiddenInfo'>"
     +     "<div class='staticImg'>" + staticImgURL + "</div>"
     +     "<div class='dynamicImg'>" + dynamicImgURL + "</div>"
+    +     "<div class='backgroundColor'>" + backgroundColor + "</div>"
     +   "</div>"
     + "</div>"
     );
 
-  /* get reference to image, 
+  // + "' style='background-color:" + backgroundColor + ";'>"
+
+  /*
+   get reference to image, 
    make it opaque to hide flickering, and 
    only make it visible again after the image is loaded 
    and resized to prevent the images from appearing too large */
@@ -167,20 +240,26 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
       img.css( "width", "100%" );
     }
 
-    img.css('opacity', 1);
+    img.css('opacity', '');
   });
 };
 
-/* Shrinks the currently expanded imagePanel (if any) down to the minimizedGallerySize
+
+/* 
+  Shrinks imagePanelToShrink (if it was expanded) down to the REDUCED_IMAGE_SIZE
   (The expanded image, if it exists, is expected to be saved in the expandedPanel global variable)
 */
-function shrinkImage() {
-  
-  if (expandedPanel != null) { // Checks if there is even an expanded imagePanel
+function shrinkImage(imagePanelToShrink) {
 
-    // Find relevant parts of the expanded imagePanel
-    var imgContainer = expandedPanel.find('.imageContainer');
-    var img = expandedPanel.find('.imageContainer img');
+  // Check if imagePanelToShrink is expanded
+  if (imagePanelToShrink != null && isExpanded(imagePanelToShrink)) {
+
+    imagePanelToShrink.addClass(REDUCED_CLASS);
+    imagePanelToShrink.removeClass(EXPANDED_CLASS);
+
+    // Find relevant parts of the expanded imagePanelToShrink
+    var imgContainer = imagePanelToShrink.find('.imageContainer');
+    var img = imagePanelToShrink.find('.imageContainer img');
 
     // Set height or width of img to scale as imgContainer is resized
     var imgHeight = img.height();
@@ -194,32 +273,177 @@ function shrinkImage() {
       img.css( "width", "100%" );
     }
 
-    // Set imageContainer size to minimizedGallerySize
-    imgContainer.css( "width", px(minimizedGallerySize));
-    imgContainer.css( "height", px(minimizedGallerySize));
+    // Set imageContainer size to REDUCED_IMAGE_SIZE
+    imgContainer.css( "width", px(REDUCED_IMAGE_SIZE));
+    imgContainer.css( "height", px(REDUCED_IMAGE_SIZE));
 
-    // Show text of image, hide imageBlurb, close button, description
+    // Show text of image, close button, description
+    unconvertBlurbStyle(imagePanelToShrink)
+    imagePanelToShrink.find('.close').hide(closeTime);
     
-    $('.imageBlurb').hide(100);
-    unconvertBlurbStyle(expandedPanel)
-    expandedPanel.find('.close').hide(closeTime);
-    
-    //TEST TEST TEST TEST
-setGifToStatic(expandedPanel);
+    setGifToStatic(imagePanelToShrink);
 
     // Set expanded panel to null
     expandedPanel = null;
   }
 }
 
-/* Called automatically when a .close button is clicked
-  Shrinks the imagePanel and scrolls appropriately, depending on the size of the panel being shrunk
+
+function expandImage(imagePanelToExpand) {
+    p('inside expandImage');
+
+    expandedPanel = imagePanelToExpand;
+    imagePanelToExpand.addClass(EXPANDED_CLASS);
+    imagePanelToExpand.removeClass(REDUCED_CLASS);
+
+    imagePanelToExpand.find('.text').hide();
+
+    var imgHeight = imagePanelToExpand.find('.imageContainer img').height();
+    var imgWidth = imagePanelToExpand.find('.imageContainer img').width();
+
+    var marginBorders = 2 * parseInt(imagePanelToExpand.css("marginRight").replace('px', ''));
+
+    // Setting max size to min of the max possible size of screen and maximumExpandedSize (to prevent it from always filling the screen)
+    var maxHeight = Math.min(maximumExpandedHeight, $(window).height() - $('.menu').outerHeight() - marginBorders);
+    var maxWidth = Math.min(maximumExpandedWidth, $(window).width() - marginBorders);
+
+    var newWidth = maxHeight * imgWidth / imgHeight;
+    var newHeight = maxWidth * imgHeight / imgWidth;
+
+    if (newWidth < maxWidth) {
+      imagePanelToExpand.find('.imageContainer').css( "height", px(maxHeight));
+      imagePanelToExpand.find('.imageContainer').css( "width", px(newWidth));
+    } else {
+      imagePanelToExpand.find('.imageContainer').css( "height", px(newHeight));
+      imagePanelToExpand.find('.imageContainer').css( "width", px(maxWidth));
+    }
+
+    // Set the image to be dynamic
+    setGifToDynamic(imagePanelToExpand);
+
+    
+    imagePanelToExpand.find('.close').show(openTime);
+    w(imagePanelToExpand.find('.close'));
+
+
+
+    const totalOpenTime = 700;
+    const constDelay = 100;
+    // const iterations = 10;
+    // const timeStep = totalOpenTime / iterations;
+
+
+    const enableScrollWrapperFunction = disableScrollWrapper(2);
+
+    for (var x = 0; x < 3; x++) {
+      window.setTimeout(function() {
+        
+        if (isThereSpaceOnTheLeft(imagePanelToExpand) || isThereSpaceOnTheRight(imagePanelToExpand)) {
+          setDescriptionToRight(imagePanelToExpand);
+          enableScrollWrapperFunction();
+        } else {
+          setTimeout(function() {
+            setDescriptionToBottom(imagePanelToExpand);
+            enableScrollWrapperFunction();
+          }, delayTime);
+        }
+
+        // setDescriptionToRight(imagePanelToExpand);
+
+//CRAXYTEZST
+        scrollTo(imagePanelToExpand, 0);
+      }, (totalOpenTime * x) + constDelay);
+    }
+    
+}
+
+
+
+
+function scrollTo(entity, timeout) {
+  setTimeout(function() {
+      // prevent standard hash navigation (avoid blinking in IE)
+      // e.preventDefault();
+
+      // top position relative to the document
+      var pos = entity.offset().top;
+
+      var menuHeight = 0;//$('.menu').outerHeight();
+
+      // animated top scrolling
+      $('body, html').animate({scrollTop: pos - menuHeight});
+    }, timeout);
+}
+
+
+
+/*
+  Animated scrolling when a menubar item is clicked
 */
-$(document).on('click','.close',function(evt){
-  var scrollTo = expandedPanel;
-  shrinkImage();
-  scrollToTopOfEntity(scrollTo);
+$(function() {
+  $('a[href*="#"]:not([href="#"])').click(function() {
+    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
+      var target = $(this.hash);
+      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
+      if (target.length) {
+        $('html, body').animate({
+          scrollTop: target.offset().top
+        }, 300, 'easeOutCirc');
+        return false;
+      }
+    }
+  });
 });
+
+
+
+/* Resizes the img of a imagePanel (if it is not expanded) to the specified percentage
+  imagePanel - the class, id, or identity of the desired imagePanel
+  percent - a string percent value to resize the img to
+*/
+function hoverAction(imagePanel, resizePercent) {
+  if (!$(imagePanel).is(expandedPanel)){
+    var img = $(imagePanel).find('.imageContainer img');
+
+    var imgHeight = img.height();
+    var imgWidth = img.width();
+
+    if (imgWidth > imgHeight) {
+      img.css( "width", "auto" );
+      img.css( "height", resizePercent );
+    } else {
+      img.css( "height", "auto" );
+      img.css( "width", resizePercent );
+    }
+  }
+}
+
+
+
+
+
+function setDescriptionToBottom(entity) {
+  p('inside setDescriptionToBottom');
+
+  if (isExpanded(entity)) {
+    convertBlurbStyle(entity);
+    entity.find('.text .description').show();
+    entity.find('.text').show('blind', 1000);
+  }
+}
+
+
+function setDescriptionToRight(entity) {
+
+  if (isExpanded(entity)) {
+    entity.find('.text .description').show();
+    entity.find('.imageContainer').css({'display': 'inline-block',
+                                        'vertical-align': 'top'});
+    entity.find('.text').css({'display': 'inline-block',
+                              'margin-left': '20px'});
+    convertBlurbStyle(entity);
+  }
+}
 
 
 
@@ -232,40 +456,56 @@ $(document).on('click','.close',function(evt){
   entity - an imagePanel
 */
 function convertBlurbStyle(entity) {
-  entity.find('.title').css({'font-size': '20px',
-                             'text-align': 'center',
-                             'display': 'block'});
-  entity.find('.author').css({'font-size': '12px',
-                              'text-align': 'center',
-                              'display': 'block'});
-  entity.find('.author').css({'font-size': '15px'});
+  p('inside convertBlurbStyle')
+
+  // entity.css({'background-color': entity.find('.backgroundColor').html()});
+    //should no longer be needed entity.find('.text').css({'background-color': entity.find('.backgroundColor').html()});
+
+// CRAZY TEST
+  // $(document.body).css({'background-color': entity.find('.backgroundColor').html()});
+  // entity.css({'width': '100%'});
+  //should no longer be needed entity.css({'background-color': entity.find('.backgroundColor').html()});
+  entity.css({'width': '100%'});
+  
+  $('#visual').addClass(EXPANDED_CLASS);
+  $('#visual').removeClass(REDUCED_CLASS);
 
 
-  entity.find('.divider').hide();
+  // $('#visual').css({'padding-left': '0px', 'padding-right': '0px'});
+
+  // entity.addClass(EXPANDED_CLASS);
+  // entity.removeClass(REDUCED_CLASS);  
 }
 
 /* Sets the textfields of the imagePanel to how they should look when imagePanel is minimized
   entity - an imagePanel
 */
 function unconvertBlurbStyle(entity) {
-  $('.text').show();
-  entity.find('.description').hide(0);
-  entity.find('.divider').show(); 
+  p('inside unconvertBlurbStyle')
 
 
+  entity.find('.description').hide(0); //TODO: CSS should cover this, but its not somehow?
   entity.find('.imageContainer').css({'display': ''});
-  entity.find('.text').css({'display': '',
-                            'margin-left': ''});
-  entity.find('.title').css({'font-size': '',
-                             'text-align': '',
-                             'display': ''});
-  entity.find('.author').css({'font-size': '',
-                              'text-align': '',
-                              'display': ''});
-  entity.find('.author').css({'font-size': ''});
+
+  // entity.css({'background-color': 'white'});
+  // should no longer be needed entity.find('.text').css({'background-color': 'white'});
+
+
+  //Undoing 'setdescription to right'
+  entity.find('.text').css({'margin-left': '0px'});
+
+  // entity.removeClass(EXPANDED_CLASS);
+  // entity.addClass(REDUCED_CLASS);
+
+// CRAZY TEST
+  $(document.body).css({'background-color': 'white'});
+  entity.css({'width': '300px'});
+  // $('#visual').css({'padding-left': '100px', 'padding-right': '100px'});
+  $('#visual').removeClass(EXPANDED_CLASS);
+  $('#visual').addClass(REDUCED_CLASS);
+
 
 }
-
 
 
 function setGifToStatic(entity) {
@@ -289,143 +529,254 @@ function setGifToDynamic(entity) {
 
 
 
+
+
+
+
+
+
+
 //______________________________________________________________________________________________
 //
 //     OTHER 
 //______________________________________________________________________________________________
 
 
-// A timer value to make sure that the refresh screen function isnt called
-// repeatedly while the screen is actively being resized
-var globalResizeTimer = null;
+function imagePanelCountPerRow() {
+  const imagePanelWidth = REDUCED_IMAGE_SIZE + (2 * REDUCED_MARGIN_SIZE);
+  const imageContainerWidth = $('#visual').width();//$(window).width();
 
-$(window).resize(function() {
-    if(globalResizeTimer != null) window.clearTimeout(globalResizeTimer);
-    globalResizeTimer = window.setTimeout(function() {
-        // NOTE: CODE BELOW IS DIRECTLY COPIED AND MODIFIED FROM BELOW -- MAKE A PROPER HELPER FUNCTION THAT EXPANDS PANELS INSTEAD THAT BOTH OF THOSE CAN CALL
-        
+  return Math.floor(imageContainerWidth/imagePanelWidth)
+}
 
-        // if (expandedPanel == null) { return;}
-
-
-        // currPanel = expandedPanel;
-
-        // shrinkImage();
-
-        // expandedPanel = currPanel;
-        // expandedPanel.find('.text').hide();
-
-        // var imgHeight = expandedPanel.find('.imageContainer img').height();
-        // var imgWidth = expandedPanel.find('.imageContainer img').width();
-
-        // var marginBorders = 2 * parseInt(expandedPanel.css("marginRight").replace('px', ''));
-
-        // var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders;
-        // var maxWidth = $(window).width() - marginBorders;
-        // var newWidth = maxHeight * imgWidth / imgHeight;
-        // var newHeight = maxWidth * imgHeight / imgWidth;
-
-        // if (newWidth < maxWidth) {
-        //   expandedPanel.find('.imageContainer').css( "height", px(maxHeight));
-        //   expandedPanel.find('.imageContainer').css( "width", px(newWidth));
-
-        // } else {
-        //   expandedPanel.find('.imageContainer').css( "height", px(newHeight));
-        //   expandedPanel.find('.imageContainer').css( "width", px(maxWidth));
-        // }
-
-        // expandedPanel.find('.close').show(openTime);
-
-        // setTimeout(function() {
-        //   if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-        //     placeDescription(expandedPanel, "left", "below")
-        //   } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-        //     placeDescription(expandedPanel, "right", "below");
-        //   } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-        //     setDescriptionToRight(expandedPanel);
-        //   } else {
-        //     setDescriptionToBottom(expandedPanel);
-        //   }
-
-        //   //scrollTo(expandedPanel, 0);
-
-        // }, delayTime);
-
-
-    }, 200);
-});
-
-
-
+function isFirstInRow(imagePanel) {
+  const imagePanelCountBeforeThis = imagePanel.prevAll('.imagePanel').size();
+  return 0 == (imagePanelCountBeforeThis % imagePanelCountPerRow());
+}
 
 
 // What we really want to do here is instead of scrolling to the top of the image always, is check if it is above or below the viewport. If any part of the image is above the viewport, scroll up (size of expanded image - 300)
-function scrollToTopOfEntity(entity) {
+function pageScrollAfterShrinking(entity) {
+
+  /* Havent yet closely considered/verified the following cases:
+  - Mobile screen
+  - When the margin-reducing of #visible causes more blocks to fit per row
+
+  */
+
+  const enableScrollWrapperFunction = disableScrollWrapper(0);
+
   
+  // const currentDistanceOfEntityTopFromTop = entity.offset().top;
+  // const currentScrolledDistanceFromTop = $(window)['scrollTop']();
+  const menuHeight = 0;//$('.menu').outerHeight();
+  const currentEntityHeight = entity.outerHeight();
+  const totalMinimizedPanelHeight = REDUCED_IMAGE_SIZE + (2 * REDUCED_MARGIN_SIZE);
 
-  var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
-  var minimizedTotalHeight = minimizedGallerySize + marginBorderSize;
+  const webpageTop = 0;
+  const viewportTop = $(window)['scrollTop']();
+  const entityTop = entity.offset().top;
 
 
-  var entityDistFromTop = entity.offset().top;
-  var scrolledDistFromTop = $(window)['scrollTop']();
-  var menuBottom = $('.menu').outerHeight();
+/*
+
+   ________________﹍﹍﹍﹍﹍﹍ webpageTop﹍﹍﹍﹍﹍﹍﹍
+  |                |                         ▲  ▲
+  |                |                         |  |
+  |                |                         ▼  |
+  |        ___﹍﹍﹍|﹍﹍﹍﹍﹍ entityTop﹍﹍﹍﹍﹍ | 
+  |       |  |     | }-currentEntityHeight      |
+  |        --      |                            |
+  |                |                            ▼
+  |  ____________﹍|﹍﹍﹍﹍﹍ viewportTop﹍﹍﹍﹍﹍﹍﹍
+  | |------------| | }-menuHeight    ﹍﹍﹍﹍﹍﹍﹍﹍﹍﹍﹍﹍ 'visibleTop' (what you can actually see)
+  | |            | |
+  | |            | |
+  | |            | | 
+  | |            | |
+  |  ------------  |    
+  |                |
+  |                |
+  |                |
+  |                |
+  |                |
+   ----------------    
+*/
 
 
-  var topOfEntityRelativeToWindow = entityDistFromTop - scrolledDistFromTop - menuBottom;
+  /*
+    Negative  if entityTop is above viewportTop
+    Zero      if entityTop is at/equal to viewportTop
+    Positive  if entityTop is below viewportTop
+  */
+  const entityTopFromVisibleTop = entityTop - (viewportTop + menuHeight);
 
-  if (spaceExistsToLeftOrRight(entity)
-    && topOfEntityRelativeToWindow <= - minimizedTotalHeight
-    && topOfEntityRelativeToWindow >= - entity.outerHeight()) {
+  const visiblePortionOfEntityHeight = entityTopFromVisibleTop + currentEntityHeight;
+
+  const entityTopIsAboveVisibleTop = entityTopFromVisibleTop < 0;
+  const entityBottomIsBelowVisibleTop = (visiblePortionOfEntityHeight) > 0;
+  const visiblePortionOfEntityHeightIsLessThanMinimizedHeight = visiblePortionOfEntityHeight < totalMinimizedPanelHeight;
+  const entityIsFirstInRow = isFirstInRow(entity); // If true, means that there is no extra that needs to be scrolled up
+
+  const entityTopIsInFirstFullyVisibleRowOrHigher = entityTop - (viewportTop + menuHeight) <= totalMinimizedPanelHeight + APPROX_REDUCED_TEXT_HEIGHT;
+
+
+  entityTopIsAboveVisibleTop ? w("entityTop is above visibleTop") : 0;
+  entityBottomIsBelowVisibleTop ? w("entity is at least partially below visibleTop") : 0;
+
+
+  if (entityIsFirstInRow && entityTopIsAboveVisibleTop && entityBottomIsBelowVisibleTop) {
     // There is space to side (aka other imagePanels are there) and the entity is partially off the screen from the top, but still visible
 
-    var heightOfVisiblePortion = topOfEntityRelativeToWindow + entity.outerHeight();
-
-    if (heightOfVisiblePortion <= minimizedTotalHeight) {
+    if (visiblePortionOfEntityHeightIsLessThanMinimizedHeight) {
       // We want scroll to have exactly that much amount still visible on the screen, even when minimized
       // UI motivation: We want the image to be visible after shrinking as much as it was when expanded to prevent scrolling up further than the user expected
-      $('body, html').animate({scrollTop: scrolledDistFromTop + topOfEntityRelativeToWindow - heightOfVisiblePortion + minimizedTotalHeight});
-    } else {
-      // Otherwise, we can safely just scroll to the top pf the entity as its minimized
-      // UI motivation: If more of the image is visible than the minimum size of the image, we might as well just show the entire minimized image and not scroll down more than that
-      $('body, html').animate({scrollTop: scrolledDistFromTop + topOfEntityRelativeToWindow});
-    }
-  }
-
-  // THIS PORTION STILL ISNT BEHAVING CORRECTLY
-  if (!spaceExistsToLeftOrRight(entity)
-    && topOfEntityRelativeToWindow <= - minimizedTotalHeight
-    && topOfEntityRelativeToWindow >= - entity.outerHeight()) {
-    // There is no space to side (aka other imagePanels are there) and the entity is partially off the screen from the top, but still visible
-
-    var heightOfVisiblePortion = topOfEntityRelativeToWindow + entity.outerHeight();
-
-    if (heightOfVisiblePortion <= minimizedTotalHeight) {
-      // We want scroll to have exactly that much amount still visible on the screen, even when minimized
-      // UI motivation: We want the image to be visible after shrinking as much as it was when expanded to prevent scrolling up further than the user expected
-      $('body, html').animate({scrollTop: scrolledDistFromTop + topOfEntityRelativeToWindow - heightOfVisiblePortion + minimizedTotalHeight});
-    } else {
-      // Otherwise, we can safely just scroll to the top pf the entity as its minimized
-      // UI motivation: If more of the image is visible than the minimum size of the image, we might as well just show the entire minimized image and not scroll down more than that
-      $('body, html').animate({scrollTop: scrolledDistFromTop + topOfEntityRelativeToWindow - 5* minimizedTotalHeight});
-    }
-  }
-
-  if (spaceExistsToLeftOrRight(entity)
-    && topOfEntityRelativeToWindow < - entity.outerHeight()) {
-    // There is space side to side and the entity is completely off the screen from the top
+      $('body, html').animate({scrollTop:
+        viewportTop // Current scroll
+        + entityTopFromVisibleTop // Will be a negative value; will cause window to scroll up to top of entity
+        - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+        - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+        + (totalMinimizedPanelHeight - visiblePortionOfEntityHeight) // Scroll down enough to hide some of the minimized panel, leaving visiblePortionOfEntityHeight visible
+      },{
+        done: enableScrollWrapperFunction
+      });
+      return;
     
+
+    } else {
+      // Otherwise, we can safely just scroll to the top pf the entity as its minimized
+      // UI motivation: If more of the image is visible than the minimum size of the image, we might as well just show the entire minimized image and not scroll down more than that
+      
+      // w("Scrolling from " + viewportTop.toString() + " to " + (viewportTop + entityTopFromVisibleTop).toString());
+
+      $('body, html').animate({scrollTop:
+        viewportTop // Current scroll
+        + entityTopFromVisibleTop // Will be a negative value; will cause window to scroll up to top of entity
+        - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+        - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+      },{
+        done: enableScrollWrapperFunction
+      });
+      return;
+    }
+  }
+
+
+  if (!entityIsFirstInRow && entityTopIsAboveVisibleTop && entityBottomIsBelowVisibleTop) {
+
+    if (visiblePortionOfEntityHeightIsLessThanMinimizedHeight) {
+      // Same as above
+      $('body, html').animate({scrollTop:
+          viewportTop // Current scroll
+          + entityTopFromVisibleTop // Will be a negative value; will cause window to scroll up to top of entity
+          - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+          - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+          + (totalMinimizedPanelHeight - visiblePortionOfEntityHeight) // Scroll down enough to hide some of the minimized panel, leaving visiblePortionOfEntityHeight visible
+          - (totalMinimizedPanelHeight + APPROX_REDUCED_TEXT_HEIGHT) // Since !entityIsFirstInRow, that means current imagePanel will join the row above, so we have to scroll up by one row extra
+      },{
+        done: enableScrollWrapperFunction
+      });
+      return;
+    
+    } else {
+      // Same as above
+      $('body, html').animate({scrollTop: 
+        viewportTop // Current scroll
+        + entityTopFromVisibleTop // Will be a negative value; will cause window to scroll up to top of entity
+        - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+        - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+        - (totalMinimizedPanelHeight + APPROX_REDUCED_TEXT_HEIGHT) // Since !entityIsFirstInRow, that means current imagePanel will join the row above, so we have to scroll up by one row extra
+      },{
+        done: enableScrollWrapperFunction
+      });
+      return;
+    }
+  }
+
+  if (entityTopIsAboveVisibleTop && !entityBottomIsBelowVisibleTop) {
+    // Entity is entirely non-visible and is off the screen to the top. 
     // We want to scroll up enough to offset the shrinking of the expanding image so that the user lefts off at close to where they started
-    $('body, html').animate({scrollTop: scrolledDistFromTop - entity.outerHeight() });
+    $('body, html').animate({scrollTop: 
+      viewportTop // Current scroll
+      - currentEntityHeight
+      + (totalMinimizedPanelHeight + APPROX_REDUCED_TEXT_HEIGHT)
+    },{
+      done: enableScrollWrapperFunction
+    });
+    return;
+
+    // w("Entity is entirely above viewport");
   }
 
-  if (!spaceExistsToLeftOrRight(entity)
-    && topOfEntityRelativeToWindow < - entity.outerHeight()) {
-    // There is no space side to side and the entity is completely off the screen from the top
-    
-    // We want to scroll enough to offset the shrinking of the large image, but also scroll up extra to account for the shrunk image merging with another row of images
-    $('body, html').animate({scrollTop: scrolledDistFromTop - entity.outerHeight() - minimizedTotalHeight});
+
+  if (entityIsFirstInRow && !entityTopIsAboveVisibleTop && entityTopIsInFirstFullyVisibleRowOrHigher) {
+
+    $('body, html').animate({scrollTop:
+        viewportTop // Current scroll
+        - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+        - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+    },{
+      done: enableScrollWrapperFunction
+    });
+    return;
+
+    w("Entity is first in row and entityTop is visible and close to visibleTop");
+
   }
+
+  if (!entityIsFirstInRow && !entityTopIsAboveVisibleTop && entityTopIsInFirstFullyVisibleRowOrHigher) {
+
+    $('body, html').animate({scrollTop:
+      viewportTop // Current scroll
+      - EXPANDED_MARGIN_TOP_SIZE // Since expanded panel has big margins that will shrink, need to scroll up by that amount too
+      - ARBITRARY_SLIGHT_EXTRA_SCROLL // To show the bottom of the row above to look less like something is cut off
+      - totalMinimizedPanelHeight
+    },{
+      done: enableScrollWrapperFunction
+    });
+    return;
+
+    w("Entity is NOT first in row and entityTop is visible and close to visibleTop");
+
+  }
+
+  w("no conditions met")
+  enableScrollWrapperFunction();
+
+  // // THIS PORTION STILL ISNT BEHAVING CORRECTLY
+  // if (!spaceExistsToLeftOrRight(entity)
+  //   && entityTopFromVisibleTop <= - totalMinimizedPanelHeight
+  //   && entityTopFromVisibleTop >= - entity.outerHeight()) {
+  //   // There is no space to side (aka other imagePanels are there) and the entity is partially off the screen from the top, but still visible
+
+  //   var visiblePortionOfEntityHeight = entityTopFromVisibleTop + entity.outerHeight();
+
+  //   if (visiblePortionOfEntityHeight <= totalMinimizedPanelHeight) {
+  //     // We want scroll to have exactly that much amount still visible on the screen, even when minimized
+  //     // UI motivation: We want the image to be visible after shrinking as much as it was when expanded to prevent scrolling up further than the user expected
+  //     $('body, html').animate({scrollTop: currentScrolledDistanceFromTop + entityTopFromVisibleTop - visiblePortionOfEntityHeight + totalMinimizedPanelHeight});
+  //   } else {
+  //     // Otherwise, we can safely just scroll to the top pf the entity as its minimized
+  //     // UI motivation: If more of the image is visible than the minimum size of the image, we might as well just show the entire minimized image and not scroll down more than that
+  //     $('body, html').animate({scrollTop: currentScrolledDistanceFromTop + entityTopFromVisibleTop - 5* totalMinimizedPanelHeight});
+  //   }
+  // }
+
+  // if (spaceExistsToLeftOrRight(entity)
+  //   && entityTopFromVisibleTop < - entity.outerHeight()) {
+  //   // There is space side to side and the entity is completely off the screen from the top
+    
+  //   // We want to scroll up enough to offset the shrinking of the expanding image so that the user lefts off at close to where they started
+  //   $('body, html').animate({scrollTop: currentScrolledDistanceFromTop - entity.outerHeight() });
+  // }
+
+  // if (!spaceExistsToLeftOrRight(entity)
+  //   && entityTopFromVisibleTop < - entity.outerHeight()) {
+  //   // There is no space side to side and the entity is completely off the screen from the top
+    
+  //   // We want to scroll enough to offset the shrinking of the large image, but also scroll up extra to account for the shrunk image merging with another row of images
+  //   $('body, html').animate({scrollTop: currentScrolledDistanceFromTop - entity.outerHeight() - totalMinimizedPanelHeight});
+  // }
 
 
 
@@ -444,16 +795,18 @@ function scrollToTopOfEntity(entity) {
   //   // top position relative to the document
   //   var pos = entity.offset().top;
 
-  //   var menuBottom = $('.menu').outerHeight();
+  //   var menuHeight = $('.menu').outerHeight();
 
   //   // animated top scrolling
-  //   $('body, html').animate({scrollTop: pos - menuBottom});
+  //   $('body, html').animate({scrollTop: pos - menuHeight});
 
   // }, 1000);
 }
 
 
 function spaceExistsToLeftOrRight(entity) {
+  p('inside spaceExistsToLeftOrRight');
+
   var screenWidth = $(window).width();
   var imagePanelWidth = entity.width();
   var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
@@ -464,31 +817,15 @@ function spaceExistsToLeftOrRight(entity) {
   // p("imagePanelWidth: " + imagePanelWidth);
   // p("marginBorderSize: " + marginBorderSize);
   // p("totalWidthOfNonImagePanelArea: " + totalWidthOfNonImagePanelArea);
-  // p("collapsedPanelSize: " + (minimizedGallerySize + marginBorderSize));
+  // p("collapsedPanelSize: " + (REDUCED_IMAGE_SIZE + marginBorderSize));
 
-  return (totalWidthOfNonImagePanelArea >= minimizedGallerySize + marginBorderSize);
+  return (totalWidthOfNonImagePanelArea >= REDUCED_IMAGE_SIZE + marginBorderSize);
 }
 
-function spaceExistsUnderCollapsedPanel(entity) {
-  var screenHeight = $(window).height();
-  var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
-
-  var spaceCollapsedPanelTakesUp = minimizedGallerySize + marginBorderSize + 0.5 * marginBorderSize; //(to account for text underneath - need a better safe way to do this though)
-  var spaceForDescriptionToTakeUp = minimizedGallerySize + marginBorderSize; // in the future this might want to be an input value so that size can depend on description length
-
-  // var totalHeightOfNonImagePanelArea = screenHeight - spaceCollapsedPanelTakesUp;
-  var totalHeightOfNonImagePanelArea = entity.find('.imageContainer img').height() - spaceCollapsedPanelTakesUp;
-
-
-  p("-- Is there space below?");
-  p("screenHeight: " + screenHeight);
-  p("totalHeightOfNonImagePanelArea: " + totalHeightOfNonImagePanelArea);
-  p("collapsedPanelSize: " + spaceCollapsedPanelTakesUp);
-
-  return (totalHeightOfNonImagePanelArea >= spaceForDescriptionToTakeUp);
-}
 
 function isThereSpaceOnTheLeft(entity) {
+  p('inside isThereSpaceOnTheLeft');
+
   var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
 
   var bodyRect = document.body.getBoundingClientRect();
@@ -496,12 +833,14 @@ function isThereSpaceOnTheLeft(entity) {
 
   p("-- Is there space on left?");
   p("left: " + elemRect.left);
-  p("collapsedPanelSize: " + (minimizedGallerySize + 1.5 * marginBorderSize));
+  p("collapsedPanelSize: " + (REDUCED_IMAGE_SIZE + 1.5 * marginBorderSize));
 
-  return (elemRect.left >= minimizedGallerySize + 1.5 * marginBorderSize);
+  return (elemRect.left >= REDUCED_IMAGE_SIZE + 1.5 * marginBorderSize);
 }
 
 function isThereSpaceOnTheRight(entity) {
+  p('inside isThereSpaceOnTheRight');
+
   var imagePanelWidth = entity.width();
   var screenWidth = $(window).width();
   var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
@@ -511,157 +850,21 @@ function isThereSpaceOnTheRight(entity) {
 
   p("-- Is there space on right?");
   p("rightcornerSpace: " + (screenWidth - (elemRect.left + imagePanelWidth)));
-  p("collapsedPanelSize: " + (minimizedGallerySize + 1.5 * marginBorderSize));
+  p("collapsedPanelSize: " + (REDUCED_IMAGE_SIZE + 1.5 * marginBorderSize));
 
-  return ((screenWidth - (elemRect.left + imagePanelWidth)) >= minimizedGallerySize + 1.5 * marginBorderSize);
-}
-
-function placeDescription(entity, leftOrRight, aboveOrBelow) {
-  if ((leftOrRight != "right" && leftOrRight != "left") || (aboveOrBelow != "above" && aboveOrBelow != "below")){
-    p("Error: Bad input in 'placeDescription' function...")
-    return;
-  }
-
-  var imagePanelWidth = entity.width();
-  var marginBorderSize = 2 * parseInt(entity.css("marginRight").replace('px', ''));
-  var bodyRect = document.body.getBoundingClientRect();
-  var elemRect = entity[0].getBoundingClientRect();
-
-  var left = 0;
-  var top = 0;
-
-  if (leftOrRight == "left") {
-    left = elemRect.left - minimizedGallerySize - marginBorderSize;
-  } else if (leftOrRight == "right") {
-    left = elemRect.left + imagePanelWidth + marginBorderSize;
-  }
-
-  if (aboveOrBelow == "above") {
-    // top = elemRect.top - bodyRect.top;
-    setDescriptionToRight(entity);
-    return;
-  } else if (aboveOrBelow == "below") {
-    top = (elemRect.top - bodyRect.top) + minimizedGallerySize + marginBorderSize * 3;
-  }
-
-  var blurb = $('.imageBlurb');
-  blurb.find('.title').html(entity.find('.title').html());
-  blurb.find('.author').html(entity.find('.author').html());
-  blurb.find('.description').html(entity.find('.description').html());
-
-
-  blurb.css( "top", top + "px" );
-  blurb.css( "left", left + "px" );
-
-  blurb.show('fade', 1000);
-
-  p("-- Placing description...");
-  p("top: " + top);
-  p("left: " + left);
-
-}
-
-
-function setDescriptionToBottom(entity) {
-  convertBlurbStyle(entity);
-  entity.find('.text .description').show();
-  entity.find('.text').show('blind', 1000);
-}
-
-function setDescriptionToRight(entity) {
-  entity.find('.text .description').show();
-
-  entity.find('.imageContainer').css({'display': 'inline-block',
-                                      'vertical-align': 'top'});
-  entity.find('.text').css({'display': 'inline-block',
-                            'margin-left': '20px'});
-
-  convertBlurbStyle(entity);
-}
-
-
-
-
-function makeBlueEnclosingBox(entity) {
-
-  var imagePanelWidth = entity.width();
-  var imagePanelHeight = entity.height();
-
-  var screenWidth = $(window).width();
-  var screenHeight = $(window).height();
-  // var rect = entity[0].getBoundingClientRect();
-  // console.log(rect.top, rect.bottom, rect.left, rect.right);
-
-  var test = $('#testSquare');
-
-
-  var bodyRect = document.body.getBoundingClientRect();
-  var elemRect = entity[0].getBoundingClientRect();
-  var offset = elemRect.top - bodyRect.top;
-
-  test.css( "top", (elemRect.top - bodyRect.top) + "px" );
-  test.css( "left", (elemRect.left) + "px" );
-  // test.css( "right", (screenWidth - imagePanelWidth - elemRect.left) + "px" );
-
-  test.height(imagePanelHeight);
-  test.width(imagePanelWidth);
-
-  p(test.css( "top"));
-  p(test.css( "left"));
-
-}
-
-
-
-
-
-$(function() {
-  $('a[href*="#"]:not([href="#"])').click(function() {
-    if (location.pathname.replace(/^\//,'') == this.pathname.replace(/^\//,'') && location.hostname == this.hostname) {
-      var target = $(this.hash);
-      target = target.length ? target : $('[name=' + this.hash.slice(1) +']');
-      if (target.length) {
-        $('html, body').animate({
-          scrollTop: target.offset().top
-        }, 900);
-        return false;
-      }
-    }
-  });
-});
-
-
-/* Resizes the img of a imagePanel (if it is not expanded) to the specified percentage
-  imagePanel - the class, id, or identity of the desired imagePanel
-  percent - a string percent value to resize the img to
-*/
-function resizeImageOnHover(imagePanel, percent) {
-  if (!$(imagePanel).is(expandedPanel)){
-    var img = $(imagePanel).find('.imageContainer img');
-
-    var imgHeight = img.height();
-    var imgWidth = img.width();
-
-    if (imgWidth > imgHeight) {
-      img.css( "width", "auto" );
-      img.css( "height", percent );
-    } else {
-      img.css( "height", "auto" );
-      img.css( "width", percent );
-    }
-  }
+  return ((screenWidth - (elemRect.left + imagePanelWidth)) >= REDUCED_IMAGE_SIZE + 1.5 * marginBorderSize);
 }
 
 
 
 $(document).ready(function() {
 
-  // var desc = "This is a really cool description for a cool art piece! Crocodiles are yummy and aligators are a little scary O:) I don't really know what I'm saying but am just trying to say some giberish. Because afterall, I have to fill this space with something!";
-
-
-  var why = "<br><span style='font-weight: 900;'>Why:</span> ";
-  var how = "<br><br><span style='font-weight: 900;'>How:</span> ";
-  var next = "<br><br><span style='font-weight: 900;'>Whats Next:</span> ";
+  var withHeading = "<br><br><span class='descriptionHeading'>WITH</span><br>";
+  var why = "<br><br><span class='descriptionHeading'>WHY</span><br>";
+  var how = "<br><br><span class='descriptionHeading'>HOW</span><br>";
+  var next = "<br><br><span class='descriptionHeading'>NEXT</span><br>";
+  var ideas = "<br><br><span class='descriptionHeading'>CORE IDEAS & INSPIRATIONS</span><br>";
+  var br = "<br>";
   
   var respGal = 
   why
@@ -706,7 +909,8 @@ $(document).ready(function() {
   + "to design a resonant visual representation of the global water crisis for the organization B for Water."
   + how
   + "depicted the world’s population as a series of water droplets which grew progressively ‘muddier’ with decrease in access to clean water. The stark contrast between the muddy-brown droplets with the clean-white droplets tries to really impress the idea of just how many people around the world don’t have enough or any clean water."
-  + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
+  // + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
+  + "<br><br><span style='font-weight: 900;'>Used by the water sustainability organization 'B for Water' in 2016</span>";
 
   var dent =
   why
@@ -719,11 +923,19 @@ $(document).ready(function() {
 
   var bmsa =
   why
-  + "to create a brochure for the Brown Muslim Students Association that would be friendly, informative, and professional"
+  + "Designing and promoting a brochure was the start to framing a more deliberate and inclusive narrative about what the Muslim community at Brown entails and represents. As a brochure, it provides an unique opportunity to not only assist new members with useful information, but also to shape some of the very first impressions that newcomers make of the community."
+  + br + br
+  + "Information in/of this community had traditionally been ambiguous and ill-defined. Thus, it tended to be concentrated among the most well-connected/social members. This knowledge gap would be one more barrier of entry for newcomers, especially those who are not as outgoing. Power dynamics like these had resulted in the community being occassionally percieved as unwelcoming or even at times, hostile. This was one of multiple efforts to start to conciously undo that."
   + how
-  + "first worked to identify the most salient info that new people would benefit from, and organized the information into digestible chunks to be easily scanned. This simplification and logical grouping of information was important because not everyone would intend to read through every word, and might be looking for only specific information or just a general sense of the organization. <br>Accessible language and the font quicksand (despite it being somewhat cliche to use) were used specifically to further a sense of friendliness. <br> All the graphics and words used were created from scratch by me, with the exception of the satellite image from Google Maps."
-  + "<br> <br> A test print: <img src='images/bmsaBrochurePrinted.jpg' alt='' style='max-width:100%;max-height:100%;'>"
-  + "<br> <br> Previous version of the brochure for reference: <br> <img src='images/bmsaOldBrochurePg1.png' alt='' style='max-width:50%;max-height:100%;'><img src='images/bmsaOldBrochurePg2.png' alt='' style='max-width:50%;max-height:100%;'>";
+  + "First I identified the most salient info that would benefit people new to the community. This was primarily through analyzing existing documentation and data on the questions recieved by the board and the chaplain. Then I simplified and grouped this information into digestible chunks. I put emphasis on creating information that could be easily scanned and indexed, since most readers would not intend to read through every word, and might only want a specific piece of information or just want a general sense of the community."
+  + br
+  + "Then I refined the word choice and presentation to not only be concise and accessible, but also to create a more well-defined narrative about the community. Things like the rounded font ‘Quicksand’ were used to help further a sense of friendliness."
+  + br
+  + "At the same time, I tweaked and refined the map, arrangments, and colors to maximize clarity and professionalism. This was to lend the brochure (and thus the community it represents) with an air of legitimacy."
+  + br
+  + "All the graphics and words used were created from scratch by me, with the exception of the satellite image from Google Maps and the aformentioned font."
+  + "<br> <br> A physical print: <img src='images/bmsaBrochurePrintedV2.jpg' alt='' style='max-width:100%;max-height:100%;'>"
+  + "<br> <br> Past version of brochure: <br> <img src='images/bmsaOldBrochurePg1.png' alt='' style='max-width:50%;max-height:100%;'><img src='images/bmsaOldBrochurePg2.png' alt='' style='max-width:50%;max-height:100%;'>";
 
 
 
@@ -735,344 +947,173 @@ $(document).ready(function() {
   + "researched 60s era San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities and the 'if people care enough, they’ll lean in and look closer' (Wes Wilson) philosophy associated with psychedelic art, while trying to strike a balance with modern design focus on readibility and simplicity. Ended up with the final version after 59 distinct iterations in Illustrator:"
   + "<br> <br> <img src='images/HamiltonHousePosterTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
 
+
+  var winter = 
+  why
+  + "As the first large-scale event open to the broader Brown University community in years, the Brown Muslim Student Association needed clear and engaging advertising material for an upcoming event with a distinguished speaker."
+  + how
+  + "Overall, I was striving towards a design that had a calm, warm, and dignified feel. This was achieved especially through the colors and arrangements. The eye-catching picture was used to place special emphasis on the important guest speaker. Snowflakes that I based on traditional Islamic tilework patterns were created to represent the winter theme of the banquet, while also providing an element of visual delight for those who looked closely. Key information was refined and grouped at the bottom for fast, at-a-glance understanding, each topic indexed by unambiguous icons. Information like “Free; All Welcome” is usually not explicitly stated on college campus posters, but was specifically included here to ensure zero doubt that everyone was invited. After creating the final version, it was also adapted it to some other sizes for various advertising platforms."
+  + "<br> <br> Some later Illustrator iterations: <img src='images/winterBanquetTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
+
+
+  var ygaAppDescription = 
+  withHeading
+  + "<dl>"
+  +   "<dt>Young Guru Academy (YGA)</dt>"
+  +     "<dd>"
+  +       "a Turkey-based non-profit NGO responsible for targeted social innovation programming to improve long-term outlooks for youth"
+  +     "</dd>"
+  +   "<dt>Brown University Department of Computer Science</dt>"
+  +     "<dd>"
+  +       "senior capstone project"
+  +     "</dd>"
+  + "</dl>"
+  + why
+  + "Pre-teens and early teens in Turkey, especially those of disadvantaged socio-economic backgrounds or refugee status, frequently have"
+  + "<ul>"
+  +   "<li>Limited exposure and comfort with science and problem-solving</li>"
+  +   "<li>A sense that higher education is too difficult and unattainable</li>"
+  +   "<li>Low levels of self-confidence</li>"
+  + "</ul>"
+  + how
+  + "Based on information from interviews conducted with students and YGA instructors, we created a prototype for a social experience designed to foster creative thinking, encourage experimentation, build self confidence, and form bonds among others their age."
+  + br + br 
+  + "This was a project of four, and my primary contributions were"
+  + "<ul>"
+  +   "<li>Qualitative research</li>"
+  +   "<li>UX planning and synthesizing</li>"
+  +   "<li>UI mocks and implementation</li>"
+  +   "<li>Programming of the ‘creations’ and ‘collections’ functionalities of the mobile app</li>"
+  + "</ul>"
+  + br + br 
+  + "We thought critically about the kinds of behaviors we wanted to optimize for, and drew a lot of inspiration from existing products and services. A lot of deliberation was put on avoiding common social media trademarks (in particular the mechanisms and algorithms that: promote unhealthy social comparison/ranking; reward sensationalism; create filter bubbles; and maximize the time users spend glued to the service)."
+  + ideas
+  + "The overall experience can be summarized with three core concepts:"
+  + "<dl>"
+  + br 
+  +   "<dt>The ‘Creation’:</dt>"
+  +     "<dd>"
+  +       "The whole experience revolves around creations the user has made with a combination of: household materials, ‘TWIN Science Kits’, and any other toys."
+  +       br + "(‘TWIN Science Kits’ are easy-to-use LEGO-compatible electronic kits designed by YGA to make science more accessible. These kits are being donated in Turkey by the thousands.)"
+  +     "</dd>"
+  + br
+  +   "<dt>A Feed of Public ‘Challenges’:</dt>"
+  +     "<dd>"
+  +       "A ‘challenge’ is either a step-by-step tutorial or a more open-ended creative prompt. These are displayed in a dedicated feed visible to all users of the app. Though some of these ‘challenges’ are made by YGA professionals, the majority are community-submitted."
+  +       br + "Any user is able to ‘respond’ to a challenge. Such a response is not in the form of a textual comment, but instead a ‘creation’ that the user has made after being inspired by the challenge itself or even by the responses that others had submitted. Users are encouraged to contribute anything from carbon copies to creations that have the thinnest thread of similarity with what’s come before. All submissions set to ‘public’ are visible right under the ‘challenge’ itself for all users to see."
+  +       br + br + "One goal with ‘challenges’ was to provide a lot of inspiration and instructions for all users. Just as LEGO instructions do, the challenges provide some structure that makes it easier to start building things that might have seemed unachievable otherwise."
+  +       br + "The other goal was to deliberately structure the social interaction between users. In the traditional social network, especially when it comes to images and art, a ‘post’ ordinarily to be about oneself and one’s own work/thoughts/experiences. We wanted to organize our experience to be more explicitly like a back-and-forth conversation one might see in a design class: When a user submits a ‘challenge’, they are either asking an open-ended question to the community, or are literally making a creation of their own more accessible by making a tutorial of it. Even when a user simply responds with one of their own creations, it is in the context of a specific, ongoing ‘conversation’ of creations influenced and inspired directly by each other."
+  +     "</dd>"
+  + br
+  +   "<dt>A Personal ‘Collection’ of Creations:</dt>"
+  +     "<dd>"
+  +       "As the user responds to the challenges with their creations (or simply logs their creations directly through the app), a ‘collection’ of their past and present work starts to form in the app. This allows them to have documentation of every creation they’ve uploaded in a centralized location. Even if the user isn’t inclined to put concious effort into registering every creation they’ve made, at minimum their collection grows as they make creations to respond and interact with the community."
+  +       br + br + "The goal here was to faciliate a mindset of seeing ones own ‘exercises in creation’ as experiences that could be tangibly ‘collected’, almost as though they were coins or Pokemon. Not only that, with the help of the documentation, these creations are able to be revisited and recreated at any time as well. For a subset of users, this also provides a form of security and helps lower the emotional barrier to break apart something they were really proud of to make the next thing."
+  +       br + "And of course, naturally over time, the user’s creations would get more complicated, developed, and unique, and so the hope was that this personal ‘portfolio’ would also provide a sense of pride and acomplishment in the specific things they’ve made and how far they’ve come."
+  +     "</dd>"
+  + "</dl>"
+  + next
+  + "Transferred assets to YGA’s development team, who plan build off the app and to create a matching sibling app for Android.";
+
+  var symbiosis =
+  why
+  + "For the final project of the course Designing Human-Centered Robots, I and two others were really interested in developing a concept that would involve exploring nudge theory, habit-forming, tragedy of the commons, and related themes within behavioral economics. We settled on an unusual challenge for ourselves: How could we foster and incentivize more of a symbiotic relationship between two people? How could we provide motivatation to actively help the other along?"
+  + how
+  + "This project involved a lot of divergent and convergent ideation, sketching, research, and many iterations of physical prototyping."
+  + " The process is documented in-depth on the blog here."
+  + br + br
+  + "The final iteration of the concept was as follows:"
+  + br
+  + "Person1 enters their major tasks for the week into a Google Sheets spreadsheet that we designed. As Person1 makes progress on a task, they update the progress of the task in spreadsheet via a dropdown with the options: Started, 25%, 50%, 75%, Done."
+  + br
+  + "Now at the same time, Person2 carries a small device (pictured) that we also designed. This badge would be updated in real-time with the current status of the task that Person1 is working on. This allows Person2 to have at-a-glance information about how Person1 is progressing. With this information, it becomes easier for Person2 to know when might be a good time to check in with Person1 (perhaps if progress has stagnated for some time for example.) It also makes it much easier for Person2 to provide real positive encouragement by celebrating the work of Person1. And not only when a task is completed, but even as progress towards it is made."
+  + br
+  + "The additional twist is that Person2 actually wears said device on their chest! Similar to the mechanisms with the 'I voted' sticker, this provides Person2 with a tiny bit of additional extrinsic motivation to help Person1 fulfill their task. Especially once the task is completed, Person2 could feel proud about the 'I helped someone today 👍' message displayed on their chest for the rest of the day."
+  + br
+  + "Ideally, Person1 would simultaneously be wearing a badge for Person2 and helping them along with their tasks as well, which would ensure a more reciprocal relationship."
+  + br
+  + "This is more speculative, but it would be interesting to study whether people who see Person2's tag would be slightly more inclined to be friendly to those around them right after."
+  + br
+  + "It would also be interesting to explore how/whether this task-badge system could be used between people who didn't know each other well beforehand. That would be a good opportunity to form bonds with others based essentially what is shared work."
+
+
+  var odni =
+  withHeading
+  + "Office of the Director of National Intelligence (ODNI) virtual internship program"
+  + why
+  + "Under President Obama’s administration, a far-reaching transparency initiative was started for the US Intelligence community to have more open communication with US citizens. Understandably though, some Intelligence employees were hesitant about the benefits of such a program. My task was to create a workplace poster to help employees in the Intelligence community see more value in the transparency initiatives."
+  + how
+  + "I first researched the main motivations behind the hesitancies that Intelligence employees might have. Among other concerns, there was a sense that more transparency wasn’t really neccessary, and that it seemed unideal to then put resources into something that wasn’t needed. Because a poster has to be quickly digested, I decided I had to find an extrememly simple argument to make that could be communicated in seconds. After a lot of deliberation, I had the idea of literalizing the concept of transparency and taking advantage of my ‘outsider’ perspective. I settled on communicating the idea that when the wider US public lacks views into the Intelligence community, they end up imagining the worst and relying on tropes from the only exposure they do have – exaggerated movies and shows."
+  + br + "After this, I went through many iterations on the poster itself. One constant was the presence of elements like the alien dissection, which I hoped would provide employees with some levity. :)"
+
+
   // “psychedelic” is a combination of the Greek words psyche and delos, and means “mind manifesting” or “soul manifesting.”
 
 
-  addImagePost('images/responsiveGalleryGifStatic.gif', 'images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual');
-  // addImagePost('images/microwaveRedesign.png', null, 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
-  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual');
-  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual');
-  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual');
-  addImagePost('images/bmsaMap.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual');
-
-  addImagePost('images/dental.svg', null, 'Illustrative Graphic Design', 'when poetry and design collide', dent, '#visual');
-  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual');
-  addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual');
 
 
 
-/*
-  addImagePost('/Users/Rume/Desktop/webstill1.png', '/Users/Rume/Desktop/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/webstill2.png', '/Users/Rume/Desktop/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
+
+  // I like all these color options alot :/ Finalized choice soon
+  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#4E3D42');
+  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#92B6B1');
+  addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#666A86');
+  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#788AA3');
+  // Also considered colors: #136F63, 
+
+  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual', '#491d7c');
+
+  addImagePost('images/dentalV3.svg', null, 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D');
+  // Also considered colors: #54442B, black
+
+  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#2FD2BB')
+  addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');
+  addImagePost('images/badgeV1LowRes.jpeg', 'images/badgeV1HighRes.jpeg', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e');
 
 
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-09.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-13.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-12.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-15.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-14.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/Brochure Redesign-09.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/broc.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/broccover.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-
-  addImagePost('/Users/Rume/Desktop/1.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/2.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/3.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/4.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-  addImagePost('/Users/Rume/Desktop/5.png', '/Users/Rume/Desktop/broc.png', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual');
-
-*/
+  addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
+  // addImagePost('images/testbwater.png', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#78C0E0');
 
 
-  // addImagePost('images/RoomMuralPhoto.jpg', null, 'Wall Redesign', 'representing a global crisis', water, '#visual');
 
 
-  // experimental
-  // addImagePost('images/trexFrameB.png', null, 'T-Rex', 'psuedo-3D sculpture', water, '#visual');
+  addImagePost('images/odniPosterV7ReducedLowRes.png', 'images/odniPosterV2HighRes.png', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e');
+
+
+
+
+  // addImagePost('images/responsiveGalleryGifStatic.gif','images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual', '#781260');
+  
+  
+  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237');
+  // Also considered colors: #D6A2AD, #ADC698, #157A6E, #813405, #f17013
+
+  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual', '#018192');
+  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual', '#2ea165');
+  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual', '#2bb370');
+
+
+
+
+
+
+
 
 
   
 
-  // addImagePost('images/spider.jpg', 'Spiderman', 'Peter Parker', desc, '#visual');
-  // addImagePost('images/guard.JPG', 'Guardian', 'Peter Quill', desc, '#visual');
 
-  // addImagePost('images/guard.JPG', 'Guardian2', 'Peter Quill', desc, '#visual');
-
-  // addImagePost('images/planets.png', 'Planets', 'Galactus', desc, '#visual');
-  // addImagePost('images/tahu.JPG', 'Tahu', 'Mata Nui', desc, '#visual');
-  // addImagePost('images/newt.png', 'Newt', 'Frog', desc, '#visual');
-
-  // addImagePost('images/night.jpg', 'Nighttime Monster', 'Godzilla', desc, '#visual');   
-  // addImagePost('images/pixar-incredibles-lou-romano-colour-script.jpg', 'This is a really really cool colorscript from the movie the Incredibles', 'Brad Bird', desc, '#visual');
-  // addImagePost('images/training_0014_by_sergioxdva-dadcne0.jpg', 'Doesnt this look exactly like a statue?!', 'I am a cool artist', desc, '#visual');
-   
-  // addImagePost('images/rabbit.jpg', 'Rambling Magician of Westerly', 'Bunnicula', desc, '#visual');     
-  // addImagePost('images/feathers.jpg', 'A Feathered Beast', 'Trex', desc, '#visual');     
-  // addImagePost('images/good.jpg', 'A Good Dinosaur', 'Pixar is the best', desc, '#visual');
-
-  
-  
 
   $(".imagePanel").hover(
     function(){ 
-      resizeImageOnHover(this, "110%");
-
-      // $(this).find('.text').css("opacity", 1);
-
-
-      // var imgContainer = $(this).find('.imageContainer');
-
-      // // Set imageContainer size to minimizedGallerySize
-      // imgContainer.css( "width", px(minimizedGallerySize * 1.03));
-      // imgContainer.css( "height", px(minimizedGallerySize * 1.03));
-
-      // //$(this).css("margin", px(10- ((minimizedGallerySize * 1.05 - minimizedGallerySize)/2)));
-
-
-      // $(this).animate({ 'margin': px(10-((minimizedGallerySize * 1.03 - minimizedGallerySize)/2))}, 1000);
-
-
+      hoverAction(this, "110%");
     },
     function(){
-      resizeImageOnHover(this, "100%");
-
-      // $(this).find('.text').css("opacity", 0.6);
-
-      // var imgContainer = $(this).find('.imageContainer');
-
-      // // Set imageContainer size to minimizedGallerySize
-      // imgContainer.css( "width", px(minimizedGallerySize));
-      // imgContainer.css( "height", px(minimizedGallerySize));
-
-      // // $(this).css("margin", px(10));
-      // $(this).animate({ 'margin': px(10)}, 500);
-
-
+      hoverAction(this, "100%");
     });
 
 
-
-
-  $(".imagePanel").click(function(e){
-
-    // If it was close button that was clicked, return
-    if ($(e.target).hasClass("close")) {
-      return;
-    }
-
-
-    // resizing to 100% (experimental)
-    var img = $(this).find('.imageContainer img');
-    var imgHeight = img.height();
-    var imgWidth = img.width();
-    if (imgWidth > imgHeight) {
-      img.css( "width", "auto" );
-      img.css( "height", "100%" );
-    } else {
-      img.css( "height", "auto" );
-      img.css( "width", "100%" );
-    }
-
-
-    // If the clicked image panel was already expanded, we don't want to shrink and enlarge again!
-    if (expandedPanel != null && expandedPanel.is($(this))) {
-      console.warn("current expanded panel contains clicked element!")
-      return;
-    }
-
-
-    // if ($(this) == expandedPanel) {
-    //   return;
-    // }
-
-    // shrink the previously expandedPanel
-    shrinkImage();
-
-    expandedPanel = $(this);
-    $(this).find('.text').hide();
-
-    var imgHeight = $(this).find('.imageContainer img').height();
-    var imgWidth = $(this).find('.imageContainer img').width();
-
-    var marginBorders = 2 * parseInt($(this).css("marginRight").replace('px', ''));
-
-
-    var arbitrarySizeBoundry = minimizedGallerySize * 2;
-
-
-    // //expandedPanel.find('.description').show();
-    // var maxHeight = $(window).height() - $('.menu').outerHeight() - marginBorders; //- $(this).find('.text').outerHeight();
-    // //expandedPanel.find('.description').hide();
-    // var maxWidth = $(window).width() - marginBorders;
-
-
-    // Setting max size to min of the max possible size of screen and arbitrarySizeBoundry (to prevent it from always filling the screen)
-    var maxHeight = Math.min(arbitrarySizeBoundry, $(window).height() - $('.menu').outerHeight() - marginBorders);
-    var maxWidth = Math.min(arbitrarySizeBoundry, $(window).width() - marginBorders);
-
-
-    // $(this).find('.imageContainer').css( "width", "auto" );
-    // $(this).find('.imageContainer').css( "height", "auto" );
-    // $(this).find('.imageContainer').css( "max-height", $(window).height() + $('.menu').outerHeight() + "px");
-    // $(this).find('.imageContainer').css( "max-width", "100%");
-
-    // if (imgHeight > imgWidth) {
-    //   $(this).find('.imageContainer img').css( "height", "100%" );
-    //   $(this).find('.imageContainer img').css( "width", "auto" );
-    // } else {
-    //   $(this).find('.imageContainer img').css( "width", "100%" );
-    //   $(this).find('.imageContainer img').css( "height", "auto" );
-    // }
-
-    // $(this).find('.imageContainer').css( "width", "auto" );
-    //     $(this).find('.imageContainer').css( "height", "auto" );
-    // $(this).find('.imageContainer').css( "max-width", "100%" );
-    //$(this).find('.imageContainer').css( "max-height", $(window).height().toString());
-
-    
-    // $(this).find('.imageContainer').css( "width", "auto" );
-    // $(this).find('.imageContainer').css( "height", "auto" );
-    // $(this).find('.imageContainer').css( "max-height", px(maxHeight));
-    // $(this).find('.imageContainer').css( "max-width", px(maxWidth));
-
-    // p(maxHeight);
-    // p(maxHeight * imgWidth / imgHeight);
-
-    // p(maxWidth);
-    // p(maxWidth * imgHeight / imgWidth);
-
-    // if (!$(this).is(expandedPanel)){
-    //   var img = $(this).find('.imageContainer img');
-
-    //   if (imgWidth > imgHeight) {
-    //     img.css( "width", "auto" );
-    //     img.css( "height", "100%" );
-    //   } else {
-    //     img.css( "height", "auto" );
-    //     img.css( "width", "100%" );
-    //   }
-    // }
-
-
-
-    var newWidth = maxHeight * imgWidth / imgHeight;
-    var newHeight = maxWidth * imgHeight / imgWidth;
-
-    if (newWidth < maxWidth) {
-      // $(this).find('.imageContainer img').css( "height", "100%" );
-      // $(this).find('.imageContainer img').css( "width", "auto" );
-
-      $(this).find('.imageContainer').css( "height", px(maxHeight));
-      $(this).find('.imageContainer').css( "width", px(newWidth));
-
-    } else {
-
-      // $(this).find('.imageContainer img').css( "width", "100%" );
-      // $(this).find('.imageContainer img').css( "height", "auto" );
-
-      $(this).find('.imageContainer').css( "height", px(newHeight));
-      $(this).find('.imageContainer').css( "width", px(maxWidth));
-    }
-
-
-    // Set the image to be dynamic
-    setGifToDynamic($(this));
-
-
-    // if (imgHeight > imgWidth) {
-    //   p("height("+imgHeight+") is larger than width("+imgWidth+")");
-
-      
-
-    //   var newHeight = maxHeight;
-    //   var newWidth = maxHeight * imgWidth / imgHeight;
-
-    //   if (newWidth < maxWidth) {
-    //     $(this).find('.imageContainer img').css( "height", "100%" );
-    //     $(this).find('.imageContainer img').css( "width", "auto" );
-
-    //     $(this).find('.imageContainer').css( "height", px(maxHeight));
-    //     $(this).find('.imageContainer').css( "width", px(maxHeight * imgWidth / imgHeight));
-
-    //   } else {
-
-    //     $(this).find('.imageContainer img').css( "width", "100%" );
-    //     $(this).find('.imageContainer img').css( "height", "auto" );
-
-    //     $(this).find('.imageContainer').css( "width", px(maxWidth));
-    //     $(this).find('.imageContainer').css( "height", px(maxWidth * imgHeight / imgWidth));
-    //   }
-
-      
-    // } else {
-    //   p("height("+imgWidth+") is larger than or equal to width("+imgHeight+")");
-    //   $(this).find('.imageContainer img').css( "width", "100%" );
-    //   $(this).find('.imageContainer img').css( "height", "auto" );
-
-    //   $(this).find('.imageContainer').css( "width", px(maxWidth));
-    //   $(this).find('.imageContainer').css( "height", px(maxWidth * imgHeight / imgWidth));
-    // }
-
-
-// COMMENTED TO MAKE CODE DEV EASIERRRRR
-// PLEASE UNCOMMET SOOONN:
-    
-    expandedPanel.find('.close').show(openTime);
-    //expandedPanel.find('.description').show(openTime);
-
-
-    // setTimeout(function() {
-
-    //   if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-    //     placeDescription(expandedPanel, "left", "below");
-    //   } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-    //     placeDescription(expandedPanel, "right", "below");
-    //   } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-    //     setDescriptionToRight(expandedPanel);
-    //   } else {
-    //     setDescriptionToBottom(expandedPanel);
-    //   }
-
-    //   p(spaceExistsToLeftOrRight(expandedPanel));
-    //   p(spaceExistsUnderCollapsedPanel(expandedPanel));
-
-    //   p(isThereSpaceOnTheLeft(expandedPanel));
-    //   p(isThereSpaceOnTheRight(expandedPanel));
-
-    //   scrollTo(expandedPanel, 0);
-
-    // }, delayTime);
-
-
-
-    const totalOpenTime = 1400;
-    const constDelay = 100;
-    // const iterations = 10;
-    // const timeStep = totalOpenTime / iterations;
-
-    for (var x = 0; x < 2; x++) {
-      window.setTimeout(function() {
-        if (isThereSpaceOnTheLeft(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-          placeDescription(expandedPanel, "left", "below");
-        } else if (isThereSpaceOnTheRight(expandedPanel) && spaceExistsUnderCollapsedPanel(expandedPanel)) {
-          placeDescription(expandedPanel, "right", "below");
-        } else if (isThereSpaceOnTheLeft(expandedPanel) || isThereSpaceOnTheRight(expandedPanel)) {
-          setDescriptionToRight(expandedPanel);
-        } else {
-          setDescriptionToBottom(expandedPanel);
-        }
-
-        // setDescriptionToRight(expandedPanel);
-
-        scrollTo(expandedPanel, 0);
-      }, (totalOpenTime * x) + constDelay);
-    }
-
-
-
-
-    //document.getElementById(expandedPanel.attr('id')).scrollIntoView();
-    //window.location.href = "#" + expandedPanel.attr('id');
-
-
-  });
-
-
-
-
-
-function scrollTo(entity, timeout) {
+function beeep(entity, timeout) {
   setTimeout(function() {
       // prevent standard hash navigation (avoid blinking in IE)
       // e.preventDefault();
@@ -1080,95 +1121,176 @@ function scrollTo(entity, timeout) {
       // top position relative to the document
       var pos = entity.offset().top;
 
-      var menuBottom = $('.menu').outerHeight();
+      var menuHeight = $('.menu').outerHeight();
 
       // animated top scrolling
-      $('body, html').animate({scrollTop: pos - menuBottom});
+      $('body, html').animate({scrollTop: pos - menuHeight*2});
     }, timeout);
+}
+
+
+
+  $(".imagePanel").click(function(e){
+    p('inside .imagePanel clicked');
+
+    // If it was close button that was clicked, return
+    if ($(e.target).hasClass("close")) {
+      //Shrinks the imagePanel and scrolls appropriately, depending on the size of the panel being shrunk
+      var scrollTo = $(e.target).closest('.imagePanel');
+      
+      pageScrollAfterShrinking(scrollTo);
+      shrinkImage(scrollTo);
+      //beeep(scrollTo, 100);
+      
+      return;
+    }
+
+    // If the clicked image panel was already expanded, we don't want to shrink and enlarge again!
+    if (expandedPanel != null && expandedPanel.is($(this))) {
+      return;
+    }
+
+    // Only option left is that a reduced imagePanel was clicked
+    // shrink the previously expandedPanel
+    shrinkImage(expandedPanel);
+    expandImage($(this));
+
+//CRAZY TEST
+// Attempts to open a link
+    // var opened = window.open("");
+    // opened.document.write($(this)[0].outerHTML);
+
+
+    // var opened = window.open("");
+    // opened.document.write(
+    //   "<html><head><title>MyTitle</title></head><body>" 
+    //   + $(this)[0].outerHTML
+    //   + "</body></html>");
+
+
+    // var opened = window.open("");
+    // opened.document.write(
+    //   "<html><head>"
+    //   + "<meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\" />    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no\">    <title>Ruban's Personal Website</title>        <link rel=\"stylesheet\" href=\"jquery-ui.css\">    <script src=\"jquery-2.1.1.js\"></script>    <script src=\"jquery-ui.js\"></script>    <link href=\"default.css\" rel=\"stylesheet\" type=\"text/css\" />    <!-- <script src=\"https://rubest.github.io/Artblog/responsiveGallery.js\"></script> -->    <script src=\"responsiveGallery.js\"></script>    <!-- <link href=\"https://fonts.googleapis.com/css?family=Raleway\" rel=\"stylesheet\">    <link href=\"https://fonts.googleapis.com/css?family=Lato|Poppins|Rubik:300\" rel=\"stylesheet\"> -->    <link href=\"https://fonts.googleapis.com/css?family=Lato:300,400,700,900\" rel=\"stylesheet\">"
+    //   + "</head><body>" 
+    //   + $(this)[0].outerHTML
+    //   + "</body></html>");
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// //Uncomment/modify if want to have clicks on not the imagePanel to collapse expanded imagePanels (if any)
+//   $(document).click(function(e){
+
+//     if (!$(e.target).closest('.imagePanel').length) {
+
+//       if( $(window).width() >= 412 && $(window).height() >= 737 ) { // is not mobile
+//         var scrollTo = expandedPanel;
+        
+//         pageScrollAfterShrinking(scrollTo);
+//         shrinkImage(expandedPanel);
+        
+//       }
+//     }    
+//   });
+
+
+
+
+});
+
+
+
+
+
+// left: 37, up: 38, right: 39, down: 40,
+// spacebar: 32, pageup: 33, pagedown: 34, end: 35, home: 36
+var keys = {37: 1, 38: 1, 39: 1, 40: 1};
+
+function preventDefault(e) {
+  e = e || window.event;
+  if (e.preventDefault)
+      e.preventDefault();
+  e.returnValue = false;  
+}
+
+function preventDefaultForScrollKeys(e) {
+    if (keys[e.keyCode]) {
+        preventDefault(e);
+        return false;
+    }
+}
+
+function disableScroll() {
+  if (window.addEventListener) // older FF
+      window.addEventListener('DOMMouseScroll', preventDefault, false);
+  window.onwheel = preventDefault; // modern standard
+  window.onmousewheel = document.onmousewheel = preventDefault; // older browsers, IE
+  window.ontouchmove  = preventDefault; // mobile
+  document.onkeydown  = preventDefaultForScrollKeys;
+}
+
+function enableScroll() {
+    if (window.removeEventListener)
+        window.removeEventListener('DOMMouseScroll', preventDefault, false);
+    window.onmousewheel = document.onmousewheel = null; 
+    window.onwheel = null; 
+    window.ontouchmove = null;  
+    document.onkeydown = null;  
 }
 
 
 
 
 
-  $(document).click(function(e){
+/*
+absorptionCount - the number of times enable scrolling has to be called before scrolling is fully re-enabled. This exists to account for cases where there are multiple scrolling-related checks.
+*/
+//https://stackoverflow.com/questions/4770025/how-to-disable-scrolling-temporarily
+function disableScrollWrapper(absorptionCount) {
 
-    p($(e.target))
+  disableScroll();
 
-    // if (!($(e.target).hasClass('imagePanel') 
-    //   ||  $(e.target).hasClass('close')
-    //   ||  $(e.target).hasClass('imageContainer')
+  var sharedAbsorptionCounter = 0;
+  if (absorptionCount == null || isNaN(absorptionCount)) {
+    sharedAbsorptionCounter = 0;
+  } else {
+    sharedAbsorptionCounter = absorptionCount;
+  }
 
 
-
-    //   )) {
-    //   shrinkImage();
-    // }
-
-    if (!$(e.target).closest('.imagePanel').length) {
-
-      if( $(window).width() >= 412 && $(window).height() >= 737 ) { // is not mobile
-        var scrollTo = expandedPanel;
-        shrinkImage();
-        scrollToTopOfEntity(scrollTo);
-      }
+  function enableScrollWrapper() {
+    if (sharedAbsorptionCounter <= 0) {
+      enableScroll();
+      w("scroll enabled");
+      return
+    } else {
+      sharedAbsorptionCounter--;
+      w("scroll NOT YET enabled");
+      return
     }
+  }
 
 
-    
-  });
+  return enableScrollWrapper;
+}
 
 
 
-
-});
-
-
-// // handle links with @href started with '#' only
-// $(document).on('click', 'a[href^="#"]', function(e) {
-//     // target element id
-//     var id = $(this).attr('href');
-
-//     // target element
-//     var $id = $(id);
-//     if ($id.size() === 0) {
-//         return;
-//     }
-
-//     // prevent standard hash navigation (avoid blinking in IE)
-//     e.preventDefault();
-
-//     // top position relative to the document
-//     var pos = $(id).offset().top;
-//     var menuBottom = $('.menu').outerHeight();
-
-//       // animated top scrolling
-//       $('body, html').animate({scrollTop: pos - menuBottom});
-// });
-
-
-$(function() {
-    $("a").click(function(e) {
-
-      // target element id
-      var id = $(this).attr('href');
-
-      // target element
-      var $id = $(id);
-      if ($id.size() === 0) {
-          return;
-      }
-
-      // prevent standard hash navigation (avoid blinking in IE)
-      e.preventDefault();
-
-      // top position relative to the document
-      var pos = $(id).offset().top;
-      var menuBottom = $('.menu').outerHeight();
-
-      // animated top scrolling
-      $('body, html').animate({scrollTop: pos - menuBottom/2});
-
-    });
-});
 

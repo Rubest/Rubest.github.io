@@ -38,9 +38,100 @@ html, body {
   /*font-family: 'Raleway', sans-serif;*/
   font-family: 'Lato', sans-serif;
 
+/* CRAZY TEST */  
+-webkit-transition: background-color 1000ms linear;
+    -ms-transition: background-color 1000ms linear;
+    transition: background-color 1000ms linear;
 
   /*font-family: 'Roboto', sans-serif;*/
 }
+
+
+
+/* Can use this to make the minimap that I wanted!!!*/
+/* What this does is set the scrollbar to none, 
+and then manually creates something to look 
+like a scrollbar that will be always visisble!*/
+/*body::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+body::-webkit-scrollbar:vertical {
+    width: 200px;
+}
+
+body::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+body::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white;*/ /* should match background, can't be transparent */
+    /*background-color: #59656f;
+}*/
+
+
+
+
+#introV2Container {
+  margin-top: 10%;
+  margin-right: 10%;
+  margin-bottom: 200px;
+  margin-left: 10%;
+  width: 80%;
+  text-align: -webkit-center;
+  margin-bottom: 200px;
+}
+
+
+
+#profileV2 {
+  width: 250px;
+  overflow: hidden;
+  display: inline-block;
+  height: 250px;
+  border-radius: 50%;
+  margin-top: 30px;
+}
+
+#profileV2 img {
+  width: 100%;
+  height: 100%;
+}
+
+#introV2 {
+  width: 500px;
+  max-width: 80%;
+  display: inline-block;
+  /* padding: 30px; */
+  padding-left: 5%;
+  /* margin-bottom: 70px; */
+  padding-top: 50px;
+  overflow: hidden;
+}
+
+#introV2 h1 {
+  font-size: 70px;
+}
+
+#introV2 h2 {
+  font-size: 19px;
+}
+
+#introV2 #introBlurb {
+  font-size: 17px;
+  font-weight: 400;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 /* BETA STICKER */
@@ -56,21 +147,26 @@ html, body {
 
 /* MENU BAR */
 .menu {
-  position: fixed;
+  /*position: fixed;*/
   top: 0px;
   left: 0px;
   right: 0px;
   background-color: white;
-  padding-top: 2%;
-  padding-bottom: 1%;
+/*  padding-top: 2%;
+  padding-bottom: 1%;*/
   z-index: 20;
+
+  padding-top: 1.2%;
+  padding-bottom: 1%;
+  /*border-bottom: 1px solid #eee*/
 
   /*opacity: .9;*/
 }
 
 .menu a {
   transition: .3s;
-  font-size: 2vh;
+  /*font-size: 2vh;*/
+  font-size: 1.7vh;
 }
 
 .menu a:link, .menu a:visited {
@@ -110,7 +206,7 @@ html, body {
 
 
   
-  height: 99%;
+  height: 89%;
 
   /*position: relative;*/
   overflow: hidden;
@@ -133,13 +229,47 @@ html, body {
   bottom: 15%;
   right: 10%;
   max-width: 40%;
+
+  /*Needed for small screens, to prevent text from causing page to spill over. Might want to refine later though*/
+  overflow:hidden;
 }
 
-@media screen and (max-height: 900px) and (max-width: 500px) {
+
+#visual.expanded {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+#visual.reduced {
+  padding-left: 100px;
+  padding-right: 100px;
+}
+
+/*@media screen and (max-height: 900px) and (max-width: 500px) {
+    #intro {
+      bottom: 8%;
+    }
+}*/
+
+
+@media only screen and (max-height: 900px) and (max-width: 500px) {
     #intro {
       bottom: 8%;
     }
 }
+
+@media only screen and (max-width: 500px) {
+    
+    #visual.reduced {
+      padding-left: 0px;
+      padding-right: 0px;
+    }
+}
+
+/*@media screen (min-width: 500px) {
+    
+}*/
+
 
 
 #about h1 {
@@ -196,8 +326,16 @@ html, body {
   flex-direction: column;
   align-items: center;*/ /* horizontally aligns items */
 
-  padding-left: 100px;
-  padding-right: 100px;
+
+/* CRAZY TEST */  
+-webkit-transition: padding-left 600ms linear;
+    -ms-transition: padding-left 600ms linear;
+    transition: padding-left 600ms linear;
+-webkit-transition: padding-right 600ms linear;
+    -ms-transition: padding-right 600ms linear;
+    transition: padding-right 600ms linear;
+
+
 }
 
 /*Also needed for centering but needs tuning*/
@@ -211,29 +349,120 @@ html, body {
   margin: 10px;
 
   vertical-align: top;
+
+
+
+/* CRAZY TEST */  
+-webkit-transition: width 500ms linear;
+    -ms-transition: width 500ms linear;
+    transition: width 500ms linear;
+
+    -webkit-transition: padding 500ms linear;
+    -ms-transition: padding 500ms linear;
+    transition: padding 500ms linear;
+
 }
+
+
+.imagePanel.expanded {
+  padding-top: 80px;
+  padding-bottom: 80px;
+  margin: 0px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+
+
+.imagePanel.reduced:hover {
+  cursor: pointer;
+}
+
+
+/*.imagePanel.expanded {
+  width: 100%;
+}*/
+
+
 
 .imagePanel .text {
   padding-top: 5px;
   width: 300px;
+  /*padding:50px;*/
   /*display: inline-block;*/
+
+
+  /* CRAZY TEST */  
+/*-webkit-transition: background-color 500ms linear;
+    -ms-transition: background-color 500ms linear;
+    transition: background-color 500ms linear;*/
+
 }
 
-.imagePanel .title { 
+.imagePanel.reduced .text {
+  background-color: white;
+}
+
+.imagePanel.expanded .text {
+  padding: 50px;
+}
+
+
+.imagePanel.reduced .title { 
   color: #1d1e2c;
   font-weight: 900;
   display: inline;
 }
 
-.imagePanel .author {
+.imagePanel.expanded .title { 
+  color: white;
+  font-weight: 900;
+  display: block;
+  opacity: 0.8;
+  font-size: 30px;
+  text-align: left;
+}
+
+.imagePanel.reduced .divider {
+  display: inline;
+}
+.imagePanel.expanded .divider {
+  display: none;
+}
+
+.imagePanel.reduced .author {
   color: #59656f;
   display: inline;
 }
 
-.imagePanel .description {
-  color: #59656f;
+.imagePanel.expanded .author {
+  color: white;
+  display: block;
+  font-size: 15px;
+  text-align: center;
+  opacity: 0.8;
   text-align: left;
+}
+
+.imagePanel.reduced .description {
+  color: #59656f;
   display: none;
+}
+
+.imagePanel.expanded .description {
+  color: white;
+  text-align: left;
+  font-weight: 400;
+  
+  color: #EEE; /* Fallback for older browsers */
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.imagePanel .description .descriptionHeading {
+  opacity: 0.5;
+  font-weight: 900;
+  font-size: 12;
 }
 
 .imagePanel .hiddenInfo {
@@ -243,6 +472,16 @@ html, body {
 .imagePanel a {
   color: #59656f;
 }
+
+//test
+.imagePanel.reduced .imageContainer {
+  /*opacity: 0.4;*/
+}
+
+.imagePanel.expanded .imageContainer {
+  /*opacity: 1;*/
+}
+
 
 .imageContainer {
   width: 300px;
@@ -254,10 +493,26 @@ html, body {
   -webkit-transition: all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
   transition:         all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 
-
   /*display: inline-block;
   vertical-align: top;*/
 }
+
+
+/*.imagePanel.reduced .imageContainer {
+  opacity: 0.8;
+}
+
+.imagePanel.expanded .imageContainer {
+  opacity: 1;
+}*/
+
+
+
+/*.imagePanel.reduced .imageContainer:hover {
+    outline: 4px solid red;
+  outline-offset: 0px;
+}*/
+
 
 .imageContainer img {
   /*width: 100%;
@@ -280,13 +535,15 @@ html, body {
 
 .close {
   position: absolute;
-  top: -10px;
-  left: 0px;
-  color: #93867F;
+  top: 10px;
+  right: 10px;
+  color: white;
+  /*color: rgba(255, 255, 255, 0.8);*/
+  /*color: #93867F;*/
   font-size: 2.4em;
 
   /*opacity:.5;*/
-  opacity:.8;
+  opacity:.3;
 
   background-color: Transparent;
   border: none;
@@ -302,7 +559,7 @@ html, body {
 }
 
 .close:hover {
-  opacity:.85;
+  opacity:1;
 }
 
 .close:focus {
@@ -322,54 +579,44 @@ html, body {
 
 
 
-.imageBlurb {
-  position: absolute;
-  width: 300px;
-  max-height: 280px;
-  overflow: scroll;
-  background-color: white;
-  display: none;
+
+/*.imagePanel {
+  position: relative;
 }
 
-.imageBlurb .title { 
-  font-size: 25px;
-  text-align: center;
-  font-weight: 900;
-}
+.imagePanel .ring {
 
-.imageBlurb .author {
-  color: #66666e;
-  font-size: 12px;
-  text-align: center;
-}
 
-.imageBlurb .description {
-  color: #66666e;
-  text-align: left;
-  font-size: 15px;
+
+
+
+    z-index: 5;
+    width: 300;
+    height: 300;
+    position: absolute;
+    border-style: solid;
+    border-width: 0;
+    background-color: transparent;
+
+
+
+      -webkit-transition: all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transition:         all 1.4s cubic-bezier(0.165, 0.84, 0.44, 1);
 }
 
 
-/* What this does is set the scrollbar to none, 
-and then manually creates something to look 
-like a scrollbar that will be always visisble!*/
-.imageBlurb::-webkit-scrollbar {
-    -webkit-appearance: none;
-}
+.imagePanel.reduced:hover .ring {
+    
+    top:-18px;
+    left:-18px;
 
-.imageBlurb::-webkit-scrollbar:vertical {
-    width: 11px;
+    width: 282;
+    height: 282;
+    border-width: 18;
 }
+*/
 
-.imageBlurb::-webkit-scrollbar:horizontal {
-    height: 11px;
-}
 
-.imageBlurb::-webkit-scrollbar-thumb {
-    border-radius: 8px;
-    border: 2px solid white; /* should match background, can't be transparent */
-    background-color: #59656f;
-}
 
 
 /*
@@ -401,23 +648,33 @@ like a scrollbar that will be always visisble!*/
   align-items: center;
 */
 
+  background-image: url("images/testBackgroundV2.svg");
+/*  overflow: hidden;
+  background-repeat: no-repeat;
+  background-position: center;*/
+  background-size: cover;
 
-  background-color: white;
+  /*background-color: white;*/
   height: 88%;
 }
+
+#join h1 {
+  font-size: 50px;
+}
+
 
 #join h4 {
   color: #66666e;
   width: 60%;
 }
 
-#join a {
+#join a, #introBlurb a {
   color: #66666e;
   text-decoration:none;
   transition: .3s;
 }
 
-#join a:hover, #join a:active {
+#join a:hover, #join a:active, #introBlurb a:hover, #introBlurb a:active {
   color: #5CC8FF;
 }
 
@@ -453,15 +710,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 p, ol, ul {
-	font-size: .8em;
+	/*font-size: .8em;*/
 }
 
 ul {
-	list-style-type: circle;
-	margin: 0em;
+	list-style-type: disc;
+  margin: 0em;
+/*	margin: 0em;
 	padding-left: 30%;
 	list-style: none;
-	text-align: left;
+	text-align: left;*/
+}
+dl {
+  margin:0px;
+}
+
+dt {
+  display: list-item;
+  list-style-type: disc;
+  margin-left: 20px;
+  /*margin-top: 10px;*/
 }
 
 
@@ -541,3 +809,69 @@ a:active {
   padding-bottom: 30%;
 }
 
+
+
+
+
+
+
+.grid-container {
+  margin-top: 20px;
+  display: grid;
+  grid-column-gap: 50px;
+  grid-row-gap: 9px;
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.row1 {
+  grid-row-start: 1;
+  grid-row-end: 2;
+}
+
+.row2 {
+  grid-row-start: 2;
+  grid-row-end: 3;
+}
+
+.col1 {
+  grid-column-start: 1;
+  grid-column-end: 2;
+  text-align: right;
+}
+
+.col2 {
+  grid-column-start: 2;
+  grid-column-end: 3;
+  text-align: left;
+}
+
+
+
+
+
+
+/* Makes text unhighlightable */
+.unselectable {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+
+
+
+
+
+
+
+
+
+
+.stop-scrolling {
+  height: 100%;
+  overflow: hidden;
+}

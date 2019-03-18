@@ -1,0 +1,354 @@
+Things included:
+- paralax background scrolling demo
+- pretty refined tags
+- increased border radius when hover over reduced imagePanel as a cool effect
+
+
+
+
+Index.html
+
+
+<div class="crazytest" style="
+	top: 2000px;
+ 	z-index:-100000;
+ 	background-color:purple;
+	width:500px;
+	height:500px;
+	position:absolute">
+</div>
+
+<div class="crazytest2" style="
+	top: 2000px;
+ 	z-index:-200000;
+ 	background-color:red;
+	width:700px;
+	height:300px;
+	position:absolute">
+</div>
+
+
+
+			<br>
+			<div id="tagContainer">
+				<div class="tag unselectable"> <div class="circle"></div> Information Design <div class="remove">x</div> </div>
+				<div class="tag unselectable"> <div class="circle"></div> Programming <div class="remove">x</div></div>
+				<div class="tag unselectable"> <div class="circle"></div> Bob <div class="remove">x</div></div>
+			</div>
+
+			<br>
+			<div id="tagContainer">
+				<div class="tag2 unselectable"> <div class="circle"></div> Information Design <div class="remove">x</div> </div>
+				<div class="tag2 unselectable"> <div class="circle"></div> Programming <div class="remove">x</div></div>
+				<div class="tag2 unselectable"> <div class="circle"></div> Bob <div class="remove">x</div></div>
+			</div>
+
+
+
+
+
+
+
+responsiveGallery.js
+
+
+
+document.addEventListener('scroll', function (event) {
+           
+    const viewportTop = $(window)['scrollTop']();
+
+    //Moves 1:1 with the page
+    // $('.crazytest').css('top', viewportTop);
+
+    //Moves faster than the rest of the page
+    // $('.crazytest').css('top', viewportTop*1.2);
+
+    // Two layers moving at different speeds
+    $('.crazytest').css('top', viewportTop*0.84 + 900);
+    $('.crazytest2').css('top', viewportTop*0.74 + 900);
+
+        // console.log('scrolling', event);
+}, true /*Capture event*/);
+
+
+
+
+$(document).on('click','.tag',function(evt){
+  
+  tag = $(evt.target)
+
+  if (tag.hasClass('selected')) {
+    tag.removeClass('selected');
+  } else {
+    tag.addClass('selected');
+  }
+
+
+});
+
+
+$(document).on('click','.tag2',function(evt){
+  
+  tag = $(evt.target)
+
+  if (tag.hasClass('selected')) {
+    tag.removeClass('selected');
+  } else {
+    tag.addClass('selected');
+  }
+
+
+});
+
+$(document).on('click','.remove',function(evt){
+  
+  tag = $(evt.target).parent()
+
+  if (tag.hasClass('selected')) {
+    tag.removeClass('selected');
+  } else {
+    tag.addClass('selected');
+  }
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+default.css
+
+
+
+
+
+.imagePanel {
+  display: inline-block;
+  /*position: relative;*/
+  margin: 10px;
+
+  vertical-align: top;
+
+
+
+/* CRAZY TEST */  
+-webkit-transition: width 500ms linear;
+    -ms-transition: width 500ms linear;
+    transition: width 500ms linear;
+
+    -webkit-transition: padding 500ms linear;
+    -ms-transition: padding 500ms linear;
+    transition: padding 500ms linear;
+
+    -webkit-transition: border-top-left-radius 500ms linear;
+    -ms-transition: border-top-left-radius 500ms linear;
+    transition: border-top-left-radius 500ms linear;
+
+}
+
+
+.imagePanel.expanded {
+  padding-top: 80px;
+  padding-bottom: 80px;
+  margin: 0px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+
+
+.imagePanel.reduced:hover {
+  cursor: pointer;
+  border-top-left-radius: 60px;
+}
+
+.imagePanel.reduced:hover .imageContainer {
+  /*opacity: 0.4;*/
+  border-top-left-radius: 60px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.tag .remove {
+  display: inline-block;
+  text-align: right;
+  overflow: hidden;
+  width: 0px;
+  height: 0px;
+  color: white;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+.tag.selected .remove {
+  width: 10px;
+  height: 12px;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+
+.tag .circle {
+  border-radius: 20px;
+  display:inline-block;
+  background-color: coral;
+  width: 7px;
+  height: 7px;
+  margin: 1.5px 3px 0.5px 0px;
+
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+.tag {
+  /*overflow: hidden;
+  position: relative;*/
+  font-size: 12px;
+  font-weight: 300;
+  display:inline-block;
+  border: 1px solid white;
+  border-radius: 40px;
+  padding: 5px 10px 5px 10px;
+  margin: 0px 5px 0px 5px;
+  cursor: pointer;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+.tag:hover {
+  /*background-color: coral;*/
+  border: 1px solid coral;
+}
+
+.tag.selected {
+  background-color: coral;
+  border: 1px solid coral;
+}
+
+.tag.selected .circle {
+  /*margin: 0px;*/
+  /*position: absolute;*/
+  margin: 3.5px 0px 2.5px 0px;
+  width: 0px;
+  height: 0px;
+}
+
+
+
+
+
+
+
+
+
+
+.tag2 .remove {
+  display: inline-block;
+  text-align: right;
+  overflow: hidden;
+  width: 0px;
+  height: 0px;
+  color: white;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+.tag2.selected .remove {
+  width: 10px;
+  height: 12px;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+
+.tag2 .circle {
+  position: absolute;
+  border-radius: 50%;
+  display:inline-block;
+  background-color: coral;
+  width: 7px;
+  height: 7px;
+  margin: 4px 3px -2px -12px;
+  z-index: -1;
+
+  -moz-transition: all .1s ease-out;
+  -o-transition: all .1s ease-out;
+  -webkit-transition: all .1s ease-out;
+  transition: all .1s ease-out;
+}
+
+.tag2 {
+  overflow: hidden;
+  position: relative;
+  font-size: 12px;
+  font-weight: 300;
+  display:inline-block;
+  border: 1px solid white;
+  border-radius: 40px;
+  padding: 5px 10px 5px 20px;
+  margin: 0px 5px 0px 5px;
+  cursor: pointer;
+
+  -moz-transition: all .2s ease-in;
+  -o-transition: all .2s ease-in;
+  -webkit-transition: all .2s ease-in;
+  transition: all .2s ease-in;
+}
+
+.tag2:hover {
+  /*background-color: coral;*/
+  border: 1px solid coral; 
+}
+
+.tag2.selected {
+  /*background-color: coral;*/
+  border: 1px solid coral;
+  padding: 5px 10px 5px 10px;
+}
+
+
+ .tag2.selected .circle{
+  border-radius: 0px;
+  position: absolute;
+  width: 120%;
+  height: 100%;
+  margin: -5px 0px 0px -20px;
+}
