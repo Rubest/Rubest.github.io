@@ -107,6 +107,12 @@
     - Added a few more important entries
     - Removed fixed position of menu-bar and set image-panels to scroll to the real top of the screen (rather than being offset by menu-bar height). Also though left the menu-bar height buffer in the calculation of the image height
 
+    March 24, 2019
+    - Added Link
+    - Added "Reaching" 3D hand painting
+    - Updated B for Water infographic with font-safe version
+    - Changed colors of YGA app and B for Water infographic to let text be more readable
+    - Reordered some elements
 
 
 
@@ -908,8 +914,8 @@ $(document).ready(function() {
   why
   + "to design a resonant visual representation of the global water crisis for the organization B for Water."
   + how
-  + "depicted the world’s population as a series of water droplets which grew progressively ‘muddier’ with decrease in access to clean water. The stark contrast between the muddy-brown droplets with the clean-white droplets tries to really impress the idea of just how many people around the world don’t have enough or any clean water."
-  // + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
+  + "depicted the world’s population as a series of water droplets that grow progressively ‘muddier’ with decrease in access to clean water. The stark contrast between the muddy droplets with the clean droplets tries to really impress the idea of just how many people around the world don’t have enough or any clean water. Because numbers and data are not easy to remember, it ends with a simple memorable statement for people to take away. Though it’s usually irresponsible to simplify data too much, the reader here has some context by the time they reach that last statement."
+// + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
   + "<br><br><span style='font-weight: 900;'>Used by the water sustainability organization 'B for Water' in 2016</span>";
 
   var dent =
@@ -1047,7 +1053,25 @@ $(document).ready(function() {
   + br + "After this, I went through many iterations on the poster itself. One constant was the presence of elements like the alien dissection, which I hoped would provide employees with some levity. :)"
 
 
+  var reaching = 
+  why
+  + "Through this piece, I wanted to represent my drive to always keep reaching for the ‘next thing’. Though our undying urge for new innovation is often uncritically framed as one of humanity's greatest strengths, it’s not necessarily purely positive. Without introspection, such drive can lead to change for the sake of change alone while reinforcing a discontentment for the magic that exists even now. Worse, it can become detached from any real needs of real people. (For example, there are many examples of audacious architecture that is different for the sake of being different, with really no other meaning or intent. Sometimes these literally worsen the lives of the surrounding community, precisely because of the sacrifices made to accommodate that novelty.) I tried to represent this all with a disembodied hand that is eternally reaching, but for nothing in particular. The hand was rendered as a painting in a literal three dimensions, which one could easily argue was a gimmick for the sake of novelty in itself!"
+  + "<br> <br> A closer view: <img src='images/reachCloseReducedHighRes.png' alt='' style='max-width:100%;max-height:100%;'>"
+  + how
+  + "After challenging myself to extend a painting out of the traditional two dimensions, I explored many possibilities. I was inspired by lightboxes and decided to make many layers that would be stacked on top of each other. Eventually I learned about acetate sheets, and their transparency made the current painting possible. Then planning the hand was tricky because it required thought not only about usual factors like pose, outline, shape, and shadows, but about the cross-sections of the hand too. This took a lot of measurements and careful planning. Then the housing itself was tricky to construct in a way that would be open from both sides and non-distracting while also being really stable."
+  
+
+  var link = 
+  why
+  + "The Lego ‘minifigure’ is a beautifully designed, minimalist toy. I wanted to create a minifigure design based on the character ‘Link’ from Nintendo’s iconic ‘Legend of Zelda’ series. The whole figure is 4 centimeters tall."
+  + how
+  + "Used clay, paper, and paint on top of a white Lego minifigure. Some of the pieces, like the arm guard, belts, and the shield layers, were less than a millimeter thick and took many tries to get right.";
+
+
   // “psychedelic” is a combination of the Greek words psyche and delos, and means “mind manifesting” or “soul manifesting.”
+
+
+
 
 
 
@@ -1066,16 +1090,20 @@ $(document).ready(function() {
   addImagePost('images/dentalV3.svg', null, 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D');
   // Also considered colors: #54442B, black
 
-  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#2FD2BB')
+  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0')
+  // Initially wanted #2FD2BB but it was probs too light 
   addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');
+  
+  // addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
+  addImagePost('images/bwater.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7');
+
   addImagePost('images/badgeV1LowRes.jpeg', 'images/badgeV1HighRes.jpeg', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e');
 
 
-  addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
-  // addImagePost('images/testbwater.png', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#78C0E0');
+  addImagePost('images/reachLowRes.png', 'images/reachReducedHighRes.png', 'Reaching', 'painting in three dimensions', reaching, '#visual', '#5d2c26');
 
-
-
+  addImagePost('images/linkLowRes.png', 'images/linkHighRes.png', 'Link from ‘Legend of Zelda’', 'sculpting delicately', link, '#visual', '#5d332a');
+  // Also considered colors: #a2695b
 
   addImagePost('images/odniPosterV7ReducedLowRes.png', 'images/odniPosterV2HighRes.png', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e');
 
@@ -1084,7 +1112,7 @@ $(document).ready(function() {
 
   // addImagePost('images/responsiveGalleryGifStatic.gif','images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual', '#781260');
   
-  
+
   addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237');
   // Also considered colors: #D6A2AD, #ADC698, #157A6E, #813405, #f17013
 
