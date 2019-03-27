@@ -114,7 +114,13 @@
     - Changed colors of YGA app and B for Water infographic to let text be more readable
     - Reordered some elements
 
-
+    March 27, 2019
+    - Updated the chaplain picture in the bmsa brochure -- I should've updated the image a long time ago
+    - Took the opportunity to rearrange the bmsa brochure presentation layout to be more straightforward and clear (hopefully)
+    - Introduced a subsystem for customizability in terms of how the expanded versions of images are resized.
+    - Set the BMSA Brochure to expand to the max width always, even if the height is larger than can fit entirely in the viewport. This is because reading the brochure is more impt than seeing all the parts at the same time.
+    - Updated some language in the Link Minifigure and the Reaching Hand entries
+    - Commented out printing to the console -- should speed things up a little and not show up to random people looking at the website.
 
 
 
@@ -136,6 +142,8 @@ const ARBITRARY_SLIGHT_EXTRA_SCROLL = 40;
 
 const REDUCED_CLASS = 'reduced';
 const EXPANDED_CLASS = 'expanded';
+
+const PRIORITIZE_WIDTH = "11111";
 
 
 //______________________________________________________________________________________________
@@ -186,12 +194,20 @@ function isExpanded(entity) {
   containerClass - the class of the div to hold this image 
   backgroundColor - of panel when expanded
 */
-function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass, backgroundColor) {
+function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass, backgroundColor, instructionsWhenResizing) {
   var errorMessage = 'A problem occured with displaying the image';
 
   if (dynamicImgURL == null) {
     dynamicImgURL = staticImgURL;
   }
+
+  resizeInstructions = "";
+  if (instructionsWhenResizing == null) {
+    resizeInstructions = "";
+  } else if (instructionsWhenResizing == PRIORITIZE_WIDTH) {
+    resizeInstructions = "<div class='resizeInstructions'>" + PRIORITIZE_WIDTH + "</div>";
+  }
+
 
   // create a unique id from the title of the image (might be a bad idea to depend on titles being unique)
   var id = title.replace(/\s|\W/g, '');
@@ -220,6 +236,7 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
     +     "<div class='staticImg'>" + staticImgURL + "</div>"
     +     "<div class='dynamicImg'>" + dynamicImgURL + "</div>"
     +     "<div class='backgroundColor'>" + backgroundColor + "</div>"
+    +     resizeInstructions
     +   "</div>"
     + "</div>"
     );
@@ -295,6 +312,18 @@ function shrinkImage(imagePanelToShrink) {
 }
 
 
+function hasPrioritizationOfWidth(imagePanel) {
+  const instructions = imagePanel.find('.resizeInstructions').html();
+
+  // w("imagePanel hasPrioritizationOfWidth: " + (instructions != undefined && instructions == PRIORITIZE_WIDTH));
+  // w("imagePanel resizeInstructions are: " + instructions);
+
+  return (instructions != undefined && instructions == PRIORITIZE_WIDTH);
+
+}
+
+
+
 function expandImage(imagePanelToExpand) {
     p('inside expandImage');
 
@@ -316,7 +345,7 @@ function expandImage(imagePanelToExpand) {
     var newWidth = maxHeight * imgWidth / imgHeight;
     var newHeight = maxWidth * imgHeight / imgWidth;
 
-    if (newWidth < maxWidth) {
+    if (newWidth < maxWidth && !hasPrioritizationOfWidth(imagePanelToExpand)) {
       imagePanelToExpand.find('.imageContainer').css( "height", px(maxHeight));
       imagePanelToExpand.find('.imageContainer').css( "width", px(newWidth));
     } else {
@@ -329,7 +358,7 @@ function expandImage(imagePanelToExpand) {
 
     
     imagePanelToExpand.find('.close').show(openTime);
-    w(imagePanelToExpand.find('.close'));
+    // w(imagePanelToExpand.find('.close'));
 
 
 
@@ -627,8 +656,8 @@ function pageScrollAfterShrinking(entity) {
   const entityTopIsInFirstFullyVisibleRowOrHigher = entityTop - (viewportTop + menuHeight) <= totalMinimizedPanelHeight + APPROX_REDUCED_TEXT_HEIGHT;
 
 
-  entityTopIsAboveVisibleTop ? w("entityTop is above visibleTop") : 0;
-  entityBottomIsBelowVisibleTop ? w("entity is at least partially below visibleTop") : 0;
+  // entityTopIsAboveVisibleTop ? w("entityTop is above visibleTop") : 0;
+  // entityBottomIsBelowVisibleTop ? w("entity is at least partially below visibleTop") : 0;
 
 
   if (entityIsFirstInRow && entityTopIsAboveVisibleTop && entityBottomIsBelowVisibleTop) {
@@ -726,7 +755,7 @@ function pageScrollAfterShrinking(entity) {
     });
     return;
 
-    w("Entity is first in row and entityTop is visible and close to visibleTop");
+    // w("Entity is first in row and entityTop is visible and close to visibleTop");
 
   }
 
@@ -742,11 +771,11 @@ function pageScrollAfterShrinking(entity) {
     });
     return;
 
-    w("Entity is NOT first in row and entityTop is visible and close to visibleTop");
+    // w("Entity is NOT first in row and entityTop is visible and close to visibleTop");
 
   }
 
-  w("no conditions met")
+  // w("no conditions met")
   enableScrollWrapperFunction();
 
   // // THIS PORTION STILL ISNT BEHAVING CORRECTLY
@@ -1058,15 +1087,16 @@ $(document).ready(function() {
   + "Through this piece, I wanted to represent my drive to always keep reaching for the ‘next thing’. Though our undying urge for new innovation is often uncritically framed as one of humanity's greatest strengths, it’s not necessarily purely positive. Without introspection, such drive can lead to change for the sake of change alone while reinforcing a discontentment for the magic that exists even now. Worse, it can become detached from any real needs of real people. (For example, there are many examples of audacious architecture that is different for the sake of being different, with really no other meaning or intent. Sometimes these literally worsen the lives of the surrounding community, precisely because of the sacrifices made to accommodate that novelty.) I tried to represent this all with a disembodied hand that is eternally reaching, but for nothing in particular. The hand was rendered as a painting in a literal three dimensions, which one could easily argue was a gimmick for the sake of novelty in itself!"
   + "<br> <br> A closer view: <img src='images/reachCloseReducedHighRes.png' alt='' style='max-width:100%;max-height:100%;'>"
   + how
-  + "After challenging myself to extend a painting out of the traditional two dimensions, I explored many possibilities. I was inspired by lightboxes and decided to make many layers that would be stacked on top of each other. Eventually I learned about acetate sheets, and their transparency made the current painting possible. Then planning the hand was tricky because it required thought not only about usual factors like pose, outline, shape, and shadows, but about the cross-sections of the hand too. This took a lot of measurements and careful planning. Then the housing itself was tricky to construct in a way that would be open from both sides and non-distracting while also being really stable."
+  + "After challenging myself to extend a painting out of the traditional two dimensions, I explored many possibilities. I was inspired by lightboxes and decided to make many layers that would be stacked on top of each other. Eventually I learned about acetate sheets, and their transparency made the end result possible."
+  + br + "Planning out the hand itself was tricky because it required thought not only about usual factors like pose, outline, shape, and shadows, but about the cross-sections of the hand too. This took a lot of measurements and careful planning."
+  + br + "Constructing the housing was another challenge. It had to be open from both sides and non-distracting while also being really stable.";
   
 
   var link = 
   why
-  + "The Lego ‘minifigure’ is a beautifully designed, minimalist toy. I wanted to create a minifigure design based on the character ‘Link’ from Nintendo’s iconic ‘Legend of Zelda’ series. The whole figure is 4 centimeters tall."
+  + "The Lego ‘minifigure’ is a beautifully designed, minimalist toy. I wanted to build off of it by creating a minifigure design of my own. This one is based on the character ‘Link’ from Nintendo’s iconic ‘Legend of Zelda’ series. The whole figure is 4 centimeters tall."
   + how
-  + "Used clay, paper, and paint on top of a white Lego minifigure. Some of the pieces, like the arm guard, belts, and the shield layers, were less than a millimeter thick and took many tries to get right.";
-
+  + "Used clay, paper, glue, and paint overlaid on a white Lego minifigure. Some of the pieces, like the arm guard, belts, and the shield layers, were less than a millimeter thick and took many tries to get right.";
 
   // “psychedelic” is a combination of the Greek words psyche and delos, and means “mind manifesting” or “soul manifesting.”
 
@@ -1092,8 +1122,12 @@ $(document).ready(function() {
 
   addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0')
   // Initially wanted #2FD2BB but it was probs too light 
-  addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');
-  
+
+  // addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');  
+  addImagePost('images/bmsaMapV2LowRes.png', 'images/bmsaBrochureV2HighRes.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023', PRIORITIZE_WIDTH);
+
+
+
   // addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
   addImagePost('images/bwater.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7');
 
@@ -1306,11 +1340,11 @@ function disableScrollWrapper(absorptionCount) {
   function enableScrollWrapper() {
     if (sharedAbsorptionCounter <= 0) {
       enableScroll();
-      w("scroll enabled");
+      // w("scroll enabled");
       return
     } else {
       sharedAbsorptionCounter--;
-      w("scroll NOT YET enabled");
+      // w("scroll NOT YET enabled");
       return
     }
   }
