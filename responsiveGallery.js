@@ -6,6 +6,8 @@
 /* ISSUES TO FIX:
  
   - eliminate any font issues by vectorizing any fonts
+  - In cases where there is a single imagePanel per row, but then after a panel is expanded, there are two per row, the automatic scrolling scrolls too far down. 
+
   - Refine/Create descriptions
   - reduce quality of shrunken images even more to lower page load times and latency
   - disable ability to right-click on a shrunken imagePanel (https://swisnl.github.io/jQuery-contextMenu/demo/disabled-menu.html#example-code)
@@ -122,6 +124,12 @@
     - Updated some language in the Link Minifigure and the Reaching Hand entries
     - Commented out printing to the console -- should speed things up a little and not show up to random people looking at the website.
 
+    April 20, 2019
+    - Added logic for portfolio pieces with really long descriptions. Before, there was the image and a narrow column of text. The problem though was that when descriptions were long, the text would expand way way past below the image, and be hard to read. Thus added logic for those specfic cases for the description to be split up into two pieces whose width would be controlled more dynamically.
+    - With this update to Chrome, https://www.chromestatus.com/feature/6662647093133312, restructured scroll handlers to be explicitly marked as non-passive to allow preventDefault() to work still.
+    - Update of some variables
+
+
 
 
 */
@@ -144,6 +152,9 @@ const REDUCED_CLASS = 'reduced';
 const EXPANDED_CLASS = 'expanded';
 
 const PRIORITIZE_WIDTH = "11111";
+const EXTRATEXT = "22222";
+
+var passiveSupported = false;
 
 
 //______________________________________________________________________________________________
@@ -194,7 +205,7 @@ function isExpanded(entity) {
   containerClass - the class of the div to hold this image 
   backgroundColor - of panel when expanded
 */
-function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass, backgroundColor, instructionsWhenResizing) {
+function addImagePost(staticImgURL, dynamicImgURL, title, author, description, containerClass, backgroundColor, instructionsWhenResizing, test) {
   var errorMessage = 'A problem occured with displaying the image';
 
   if (dynamicImgURL == null) {
@@ -202,12 +213,22 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
   }
 
   resizeInstructions = "";
+  expandedTextClass = "";
+  restOfLongDescription = "";
   if (instructionsWhenResizing == null) {
     resizeInstructions = "";
   } else if (instructionsWhenResizing == PRIORITIZE_WIDTH) {
     resizeInstructions = "<div class='resizeInstructions'>" + PRIORITIZE_WIDTH + "</div>";
   }
+  if (test != '' && test != null) {
+    expandedTextClass = "partOfLongDescription";
 
+    restOfLongDescription=
+        "<div class='text extratext'>"
+    +     "<div class='description'>" + test + "</div>"
+    +   "</div>";
+
+  }
 
   // create a unique id from the title of the image (might be a bad idea to depend on titles being unique)
   var id = title.replace(/\s|\W/g, '');
@@ -226,12 +247,13 @@ function addImagePost(staticImgURL, dynamicImgURL, title, author, description, c
 
     +     "<img src='" + staticImgURL + "' alt='" + errorMessage + "'>"
     +   "</div>"
-    +   "<div class='text'>"
+    +   "<div class='text " + expandedTextClass + "'>"
     +     "<div class='title'>" + title + "</div>"
     +     "<span class='divider'> | </span>"
     +     "<div class='author'>" + author + "</div>"
     +     "<div class='description'>" + description + "</div>"
     +   "</div>"
+    +   restOfLongDescription
     +   "<div class='hiddenInfo'>"
     +     "<div class='staticImg'>" + staticImgURL + "</div>"
     +     "<div class='dynamicImg'>" + dynamicImgURL + "</div>"
@@ -894,14 +916,14 @@ function isThereSpaceOnTheRight(entity) {
 
 $(document).ready(function() {
 
-  var withHeading = "<br><br><span class='descriptionHeading'>WITH</span><br>";
-  var why = "<br><br><span class='descriptionHeading'>WHY</span><br>";
-  var how = "<br><br><span class='descriptionHeading'>HOW</span><br>";
-  var next = "<br><br><span class='descriptionHeading'>NEXT</span><br>";
-  var ideas = "<br><br><span class='descriptionHeading'>CORE IDEAS & INSPIRATIONS</span><br>";
-  var br = "<br>";
+  const withHeading = "<br><br><span class='descriptionHeading'>WITH</span><br>";
+  const why = "<br><br><span class='descriptionHeading'>WHY</span><br>";
+  const how = "<br><br><span class='descriptionHeading'>HOW</span><br>";
+  const next = "<br><br><span class='descriptionHeading'>NEXT</span><br>";
+  const ideas = "<br><br><br><span class='descriptionHeading'>CORE IDEAS & INSPIRATIONS</span><br>";
+  const br = "<br>";
   
-  var respGal = 
+  const respGal = 
   why
   + "to design a museum-inspired digital gallery experience that allows multiple images to coexist with latent textual descriptions – that are able to appear without isolating or encroaching on the images"
   + how
@@ -910,14 +932,14 @@ $(document).ready(function() {
   + "I hope to work out some more subtle kinks and spin it off into a public GitHub package so other people can use it as well!"
   + "<br><br><span style='font-weight: 900;'>I’ve used it in the gallery that you are currently viewing!</span>";
 
-  var micro =  
+  const micro =  
   why
   + "to create a more simplified and intuitive microwave experience."
   + how
   + "worked with a team to (1) Research the current use-cases of microwaves amongst various groups of users (2) Conceptualize a touchscreen interface with simplified options and a unique time-keeping system (3) Design various paper prototypes and mockups (4) Conduct user testing and feedback sessions to create further iterations (5) Present a 2 min pitch for public feedback and criticism."
   + "<br><br><a href='https://www.youtube.com/watch?v=6DrnK7Flaxc'><span style='font-weight: 900;'>See a 2 minute demo video!</span></a>";
 
-  var airp = 
+  const airp = 
   why
   + "to provide a simple way for Brown students traveling to and from the Providence airport to find other Brown students to split the cost of an Uber or Lyft with."
   + how
@@ -925,7 +947,7 @@ $(document).ready(function() {
   + next
   + "we are in the process of finding a suitable server hosting service to host the backend, and aim to release the webapp soon for Brown students to use!";
 
-  var virgw = 
+  const virgw = 
   why
   + "to create a central web-accessible portal for Virgo App Inc. employees to see and update customer requests and their status’ in real time, and chat with customers directly."
   + how
@@ -933,13 +955,13 @@ $(document).ready(function() {
   + next
   + "some of the general patterns developed here like creating a field of separate request cards with the same structure and rules have continued to be used in later work (like responsiveWebGallery in this case)";
 
-  var virga =
+  const virga =
   why
   + "to allow consumers  to request household services of any type (like laundry, walking a dog, etc) from trusted small businesses in their vicinity through a mobile app."
   + how
   + "worked with another developer to create a 40-screen app from a combination of Swift and the Xcode visual editor. Unlike my other project at Virgo, this had a (fairly) detailed Illustrator mockup set before we started work that served as a guiding hand. Throughout the process of implementing every aspect of the app, from login to messaging, we strived to follow the design templates as closely as possible, while also changing some aspects (after approval) for the sake of a better user experience.";
 
-  var water =
+  const water =
   why
   + "to design a resonant visual representation of the global water crisis for the organization B for Water."
   + how
@@ -947,7 +969,7 @@ $(document).ready(function() {
 // + "<br><br><a href='http://www.bforwater.org/about/#aboutus'><span style='font-weight: 900;'>Check out the infographic here!</span></a>";
   + "<br><br><span style='font-weight: 900;'>Used by the water sustainability organization 'B for Water' in 2016</span>";
 
-  var dent =
+  const dent =
   why
   + "to bridge the literal and figurative space between poetry and graphics"
   + how
@@ -956,7 +978,7 @@ $(document).ready(function() {
   + "<br> <br> My initial pitch and sketch: <img src='images/DentalPitch.png' alt='' style='max-width:100%;max-height:100%;'>";
 
 
-  var bmsa =
+  const bmsa =
   why
   + "Designing and promoting a brochure was the start to framing a more deliberate and inclusive narrative about what the Muslim community at Brown entails and represents. As a brochure, it provides an unique opportunity to not only assist new members with useful information, but also to shape some of the very first impressions that newcomers make of the community."
   + br + br
@@ -975,7 +997,7 @@ $(document).ready(function() {
 
 
 
-  var psych = 
+  const psych = 
   why
   + "to design a poster to advertise a performance at the Hamilton House for Adult Learning Exchange for senior citizens"
   + how
@@ -983,7 +1005,7 @@ $(document).ready(function() {
   + "<br> <br> <img src='images/HamiltonHousePosterTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
 
 
-  var winter = 
+  const winter = 
   why
   + "As the first large-scale event open to the broader Brown University community in years, the Brown Muslim Student Association needed clear and engaging advertising material for an upcoming event with a distinguished speaker."
   + how
@@ -991,7 +1013,7 @@ $(document).ready(function() {
   + "<br> <br> Some later Illustrator iterations: <img src='images/winterBanquetTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
 
 
-  var ygaAppDescription = 
+  const ygaAppDescription = 
   withHeading
   + "<dl>"
   +   "<dt>Young Guru Academy (YGA)</dt>"
@@ -1010,7 +1032,9 @@ $(document).ready(function() {
   +   "<li>A sense that higher education is too difficult and unattainable</li>"
   +   "<li>Low levels of self-confidence</li>"
   + "</ul>"
-  + how
+
+  const ygaAppDescription2 = 
+  how
   + "Based on information from interviews conducted with students and YGA instructors, we created a prototype for a social experience designed to foster creative thinking, encourage experimentation, build self confidence, and form bonds among others their age."
   + br + br 
   + "This was a project of four, and my primary contributions were"
@@ -1020,7 +1044,7 @@ $(document).ready(function() {
   +   "<li>UI mocks and implementation</li>"
   +   "<li>Programming of the ‘creations’ and ‘collections’ functionalities of the mobile app</li>"
   + "</ul>"
-  + br + br 
+  + br 
   + "We thought critically about the kinds of behaviors we wanted to optimize for, and drew a lot of inspiration from existing products and services. A lot of deliberation was put on avoiding common social media trademarks (in particular the mechanisms and algorithms that: promote unhealthy social comparison/ranking; reward sensationalism; create filter bubbles; and maximize the time users spend glued to the service)."
   + ideas
   + "The overall experience can be summarized with three core concepts:"
@@ -1050,10 +1074,14 @@ $(document).ready(function() {
   + next
   + "Transferred assets to YGA’s development team, who plan build off the app and to create a matching sibling app for Android.";
 
-  var symbiosis =
+
+
+  const symbiosis =
   why
   + "For the final project of the course Designing Human-Centered Robots, I and two others were really interested in developing a concept that would involve exploring nudge theory, habit-forming, tragedy of the commons, and related themes within behavioral economics. We settled on an unusual challenge for ourselves: How could we foster and incentivize more of a symbiotic relationship between two people? How could we provide motivatation to actively help the other along?"
-  + how
+
+  const symbiosis2 =
+  how
   + "This project involved a lot of divergent and convergent ideation, sketching, research, and many iterations of physical prototyping."
   + " The process is documented in-depth on the blog here."
   + br + br
@@ -1072,7 +1100,9 @@ $(document).ready(function() {
   + "It would also be interesting to explore how/whether this task-badge system could be used between people who didn't know each other well beforehand. That would be a good opportunity to form bonds with others based essentially what is shared work."
 
 
-  var odni =
+
+
+  const odni =
   withHeading
   + "Office of the Director of National Intelligence (ODNI) virtual internship program"
   + why
@@ -1082,7 +1112,7 @@ $(document).ready(function() {
   + br + "After this, I went through many iterations on the poster itself. One constant was the presence of elements like the alien dissection, which I hoped would provide employees with some levity. :)"
 
 
-  var reaching = 
+  const reaching = 
   why
   + "Through this piece, I wanted to represent my drive to always keep reaching for the ‘next thing’. Though our undying urge for new innovation is often uncritically framed as one of humanity's greatest strengths, it’s not necessarily purely positive. Without introspection, such drive can lead to change for the sake of change alone while reinforcing a discontentment for the magic that exists even now. Worse, it can become detached from any real needs of real people. (For example, there are many examples of audacious architecture that is different for the sake of being different, with really no other meaning or intent. Sometimes these literally worsen the lives of the surrounding community, precisely because of the sacrifices made to accommodate that novelty.) I tried to represent this all with a disembodied hand that is eternally reaching, but for nothing in particular. The hand was rendered as a painting in a literal three dimensions, which one could easily argue was a gimmick for the sake of novelty in itself!"
   + "<br> <br> A closer view: <img src='images/reachCloseReducedHighRes.png' alt='' style='max-width:100%;max-height:100%;'>"
@@ -1092,7 +1122,7 @@ $(document).ready(function() {
   + br + "Constructing the housing was another challenge. It had to be open from both sides and non-distracting while also being really stable.";
   
 
-  var link = 
+  const link = 
   why
   + "The Lego ‘minifigure’ is a beautifully designed, minimalist toy. I wanted to build off of it by creating a minifigure design of my own. This one is based on the character ‘Link’ from Nintendo’s iconic ‘Legend of Zelda’ series. The whole figure is 4 centimeters tall."
   + how
@@ -1111,35 +1141,35 @@ $(document).ready(function() {
   // I like all these color options alot :/ Finalized choice soon
   // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#4E3D42');
   // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#92B6B1');
-  addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#666A86');
+  addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#666A86', null, '');
   // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#788AA3');
   // Also considered colors: #136F63, 
 
-  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual', '#491d7c');
+  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual', '#491d7c', null, '');
 
-  addImagePost('images/dentalV3.svg', null, 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D');
+  addImagePost('images/dentalV3.svg', null, 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D', null, '');
   // Also considered colors: #54442B, black
 
-  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0')
+  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0', null, ygaAppDescription2);
   // Initially wanted #2FD2BB but it was probs too light 
 
   // addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');  
-  addImagePost('images/bmsaMapV2LowRes.png', 'images/bmsaBrochureV2HighRes.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023', PRIORITIZE_WIDTH);
+  addImagePost('images/bmsaMapV2LowRes.png', 'images/bmsaBrochureV2HighRes.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023', PRIORITIZE_WIDTH, '');
 
 
 
   // addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
-  addImagePost('images/bwater.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7');
+  addImagePost('images/bwater.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7', null, '');
 
-  addImagePost('images/badgeV1LowRes.jpeg', 'images/badgeV1HighRes.jpeg', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e');
+  addImagePost('images/badgeV1LowRes.jpeg', 'images/badgeV1HighRes.jpeg', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e', null, symbiosis2);
 
 
-  addImagePost('images/reachLowRes.png', 'images/reachReducedHighRes.png', 'Reaching', 'painting in three dimensions', reaching, '#visual', '#5d2c26');
+  addImagePost('images/reachLowRes.png', 'images/reachReducedHighRes.png', 'Reaching', 'painting in three dimensions', reaching, '#visual', '#5d2c26', null, '');
 
-  addImagePost('images/linkLowRes.png', 'images/linkHighRes.png', 'Link from ‘Legend of Zelda’', 'sculpting delicately', link, '#visual', '#5d332a');
+  addImagePost('images/linkLowRes.png', 'images/linkHighRes.png', 'Link from ‘Legend of Zelda’', 'sculpting delicately', link, '#visual', '#5d332a', null, '');
   // Also considered colors: #a2695b
 
-  addImagePost('images/odniPosterV7ReducedLowRes.png', 'images/odniPosterV2HighRes.png', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e');
+  addImagePost('images/odniPosterV7ReducedLowRes.png', 'images/odniPosterV2HighRes.png', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e', null, '');
 
 
 
@@ -1147,12 +1177,12 @@ $(document).ready(function() {
   // addImagePost('images/responsiveGalleryGifStatic.gif','images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual', '#781260');
   
 
-  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237');
+  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237', null, '');
   // Also considered colors: #D6A2AD, #ADC698, #157A6E, #813405, #f17013
 
-  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual', '#018192');
-  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual', '#2ea165');
-  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual', '#2bb370');
+  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual', '#018192', null, '');
+  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual', '#2ea165', null, '');
+  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual', '#2bb370', null, '');
 
 
 
@@ -1237,6 +1267,8 @@ function beeep(entity, timeout) {
     //   + "</head><body>" 
     //   + $(this)[0].outerHTML
     //   + "</body></html>");
+
+
   });
 
 
@@ -1245,7 +1277,19 @@ function beeep(entity, timeout) {
 
 
 
+  try {
+    var options = {
+      get passive() { // This function will be called when the browser
+                      //   attempts to access the passive property.
+        passiveSupported = true;
+      }
+    };
 
+    window.addEventListener("test", options, options);
+    window.removeEventListener("test", options, options);
+  } catch(err) {
+    passiveSupported = false;
+  }
 
 
 
@@ -1299,22 +1343,42 @@ function preventDefaultForScrollKeys(e) {
     }
 }
 
+
+// Added more explicit handling of 'passive'ness of the listeners after this recent update: https://www.chromestatus.com/feature/6662647093133312
 function disableScroll() {
-  if (window.addEventListener) // older FF
-      window.addEventListener('DOMMouseScroll', preventDefault, false);
-  window.onwheel = preventDefault; // modern standard
-  window.onmousewheel = document.onmousewheel = preventDefault; // older browsers, IE
-  window.ontouchmove  = preventDefault; // mobile
-  document.onkeydown  = preventDefaultForScrollKeys;
+
+    if (window.addEventListener) {// older FF
+        window.addEventListener('DOMMouseScroll', preventDefault, passiveSupported ? { passive: false } : false);
+
+        window.addEventListener('scroll', preventDefault, passiveSupported ? { passive: false } : false);
+        window.addEventListener('wheel', preventDefault, passiveSupported ? { passive: false } : false);
+        window.addEventListener('keydown', preventDefault, passiveSupported ? { passive: false } : false);
+        window.addEventListener('touchmove', preventDefault, passiveSupported ? { passive: false } : false);
+    } else {
+        window.onwheel = preventDefault; // modern standard
+        window.onmousewheel = document.onmousewheel = preventDefault; // older browsers, IE
+        window.ontouchmove  = preventDefault; // mobile
+        document.onkeydown  = preventDefaultForScrollKeys;
+    }
+
 }
 
 function enableScroll() {
-    if (window.removeEventListener)
-        window.removeEventListener('DOMMouseScroll', preventDefault, false);
-    window.onmousewheel = document.onmousewheel = null; 
-    window.onwheel = null; 
-    window.ontouchmove = null;  
-    document.onkeydown = null;  
+
+    if (window.removeEventListener) {
+        window.removeEventListener('DOMMouseScroll', preventDefault, passiveSupported ? { passive: false } : false);
+
+        window.removeEventListener('scroll', preventDefault, passiveSupported ? { passive: false } : false);
+        window.removeEventListener('wheel', preventDefault, passiveSupported ? { passive: false } : false);
+        window.removeEventListener('keydown', preventDefault, passiveSupported ? { passive: false } : false);
+        window.removeEventListener('touchmove', preventDefault, passiveSupported ? { passive: false } : false);
+    } else {
+        window.onmousewheel = document.onmousewheel = null; 
+        window.onwheel = null; 
+        window.ontouchmove = null;  
+        document.onkeydown = null;      
+    }
+
 }
 
 

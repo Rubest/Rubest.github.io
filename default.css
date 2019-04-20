@@ -253,10 +253,20 @@ body::-webkit-scrollbar-thumb {
 
 
 @media only screen and (max-height: 900px) and (max-width: 500px) {
+
     #intro {
       bottom: 8%;
     }
 }
+
+
+@media only screen and (max-width: 1200px) {
+
+    .imagePanel.expanded .partOfLongDescription {
+      width: 60%;
+    }
+}
+
 
 @media only screen and (max-width: 500px) {
     
@@ -264,6 +274,10 @@ body::-webkit-scrollbar-thumb {
       padding-left: 0px;
       padding-right: 0px;
     }
+
+/*    .imagePanel.expanded .text.extratext {
+      width: 60%;
+    }*/
 }
 
 /*@media screen (min-width: 500px) {
@@ -400,12 +414,19 @@ body::-webkit-scrollbar-thumb {
 
 }
 
+
 .imagePanel.reduced .text {
   background-color: white;
 }
 
 .imagePanel.expanded .text {
   padding: 50px;
+  padding-bottom: 0px;
+}
+
+.imagePanel.expanded .text.extratext {
+  padding-top: 0px;
+  width: 60%;
 }
 
 
