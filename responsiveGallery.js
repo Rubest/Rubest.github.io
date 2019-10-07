@@ -5,6 +5,10 @@
 
 /* ISSUES TO FIX:
  
+  - Add Safari support, with an alternative to webp images. This has some great ideas: https://css-tricks.com/using-webp-images/
+
+  - If you want to open a project in a new tab, that's not currently possible. Just wrapping an image in an <a></a> tag is enough to have it link and that works, but (obviously) causes the page to redirect instead of the panels expanding normally. Ideally figure out a way to open things in new tabs without messing with existing behavior.
+
   - eliminate any font issues by vectorizing any fonts
   - In cases where there is a single imagePanel per row, but then after a panel is expanded, there are two per row, the automatic scrolling scrolls too far down. 
 
@@ -129,6 +133,16 @@
     - With this update to Chrome, https://www.chromestatus.com/feature/6662647093133312, restructured scroll handlers to be explicitly marked as non-passive to allow preventDefault() to work still.
     - Update of some variables
 
+    October 6, 2019
+    - Cleaned up existing descriptions considerably (spelling, formatting, sentence flow)
+    - Made links in the ImagePanel become brighter when hovered, so that expected URL affordances are present
+    - Added 'lang' attribute to html tag for screenreaders
+    - Ran Chrome analysis. Performance: 86-30%, Accessibility: 36%, Best Practices: 93%, SEO: 78%
+    - Replaced most images with .webp files, which resulted in file size drops from about 89.4 MB to 42.8 MB. If only counting non-gifs, went from 45.4 MB to 6 MB !!! The .SVGs did not convert well though, so decided to keep using them for now.
+        - Note: Safari still does not support .webp though, so this update will have broken Safari support -- will fix that soon
+    - Larger images are now displayed only once they are fully loaded, which should reduce lag
+    - Also, larger images only *start* to be loaded in the middle of the image panel opening, which seems to have cut down on the stuttering a huge amount (because the majority of the image panel expanding has finished by that point.) Did not start loading after the imagePanel is fully expanded though because it made the website look laggy
+    - Tried image prefetching to html as a test but doesnt seem to be working as I had expected it to
 
 
 
@@ -139,7 +153,7 @@ const REDUCED_IMAGE_SIZE = 300; // (in px)
 const maximumExpandedHeight = REDUCED_IMAGE_SIZE * 3;
 const maximumExpandedWidth = REDUCED_IMAGE_SIZE * 2;
 const closeTime = 1400;
-const openTime = 1400;
+const openTime = 1400; // Was set to 1400, can set it back if a problem is discovered
 const delayTime = 1400;
 
 
@@ -581,12 +595,27 @@ function setGifToDynamic(entity) {
 
   // Find and change the image currently on display
   img = entity.find('.imageContainer img');
-  img.attr("src", dynamicImg);
+
+  setTimeout( () => showImageOnceLoaded(dynamicImg, img), openTime/2);
+
+  // img.attr("src", dynamicImg);
 }
 
 
 
+function showImageOnceLoaded(urlToLoad, imgToUpdate) {
+  imageToLoad = new Image();
 
+  imageToLoad.onload = function() {
+    w("Image " + urlToLoad  + " was loaded!")
+
+
+
+    imgToUpdate.attr("src", imageToLoad.src);
+  };
+
+  imageToLoad.src = urlToLoad;
+}
 
 
 
@@ -936,8 +965,16 @@ $(document).ready(function() {
   why
   + "to create a more simplified and intuitive microwave experience."
   + how
-  + "worked with a team to (1) Research the current use-cases of microwaves amongst various groups of users (2) Conceptualize a touchscreen interface with simplified options and a unique time-keeping system (3) Design various paper prototypes and mockups (4) Conduct user testing and feedback sessions to create further iterations (5) Present a 2 min pitch for public feedback and criticism."
-  + "<br><br><a href='https://www.youtube.com/watch?v=6DrnK7Flaxc'><span style='font-weight: 900;'>See a 2 minute demo video!</span></a>";
+  + "worked with a team to:"
+
+  + "<ol type='1'>"
+  +   "<li>Research the current use-cases of microwaves amongst various groups of users</li>"
+  +   "<li>Conceptualize a touchscreen interface with simplified options and a unique time-keeping system</li>"
+  +   "<li>Design various paper prototypes and mockups</li>"
+  +   "<li>Conduct user testing and feedback sessions to create further iterations</li>"
+  +   "<li>Present a 2 min pitch for public feedback and critique.</li>"
+  + "</ol>"
+  + "<br><a href='https://www.youtube.com/watch?v=6DrnK7Flaxc'><span style='font-weight: 900;'>See a 2 minute demo video!</span></a>";
 
   const airp = 
   why
@@ -971,46 +1008,46 @@ $(document).ready(function() {
 
   const dent =
   why
-  + "to bridge the literal and figurative space between poetry and graphics"
+  + "To bridge the literal and figurative space between poetry and graphics"
   + how
-  + "worked with a writer to create a graphic poem where the traditional boundaries between text and illustration are blurred. The graphics of the piece encompass the words to reflect and represent the overarching themes of the poem."
+  + "Worked with a writer's poem to create a graphic piece where the traditional boundaries between text and illustration are blurred. The graphics of the piece encompass the words to reflect and represent the overarching themes of the poem."
   + "<br><br><span style='font-weight: 900;'>Exhibited at the Granoff Center for Creative Arts in October 2016</span>"
-  + "<br> <br> My initial pitch and sketch: <img src='images/DentalPitch.png' alt='' style='max-width:100%;max-height:100%;'>";
+  + "<br> <br> My initial pitch to my collaborator: <img src='images/DentalPitch.webp' alt='' style='max-width:100%;max-height:100%;'>";
 
 
   const bmsa =
   why
   + "Designing and promoting a brochure was the start to framing a more deliberate and inclusive narrative about what the Muslim community at Brown entails and represents. As a brochure, it provides an unique opportunity to not only assist new members with useful information, but also to shape some of the very first impressions that newcomers make of the community."
   + br + br
-  + "Information in/of this community had traditionally been ambiguous and ill-defined. Thus, it tended to be concentrated among the most well-connected/social members. This knowledge gap would be one more barrier of entry for newcomers, especially those who are not as outgoing. Power dynamics like these had resulted in the community being occassionally percieved as unwelcoming or even at times, hostile. This was one of multiple efforts to start to conciously undo that."
+  + "Information in/of this community had traditionally been ambiguous and ill-defined. Thus, it tended to be concentrated among the most well-connected/social members. This knowledge gap would be one more barrier of entry for newcomers, especially those who are not as outgoing. Power dynamics like these had resulted in the community being occasionally perceived as unwelcoming or even at times, hostile. This was one of multiple efforts to start to conciously undo that."
   + how
   + "First I identified the most salient info that would benefit people new to the community. This was primarily through analyzing existing documentation and data on the questions recieved by the board and the chaplain. Then I simplified and grouped this information into digestible chunks. I put emphasis on creating information that could be easily scanned and indexed, since most readers would not intend to read through every word, and might only want a specific piece of information or just want a general sense of the community."
   + br
   + "Then I refined the word choice and presentation to not only be concise and accessible, but also to create a more well-defined narrative about the community. Things like the rounded font ‘Quicksand’ were used to help further a sense of friendliness."
   + br
-  + "At the same time, I tweaked and refined the map, arrangments, and colors to maximize clarity and professionalism. This was to lend the brochure (and thus the community it represents) with an air of legitimacy."
+  + "At the same time, I tweaked and refined the map, arrangments, and colors to maximize clarity and professionalism. This was to lend the brochure (and thus the community it represents) an air of legitimacy."
   + br
   + "All the graphics and words used were created from scratch by me, with the exception of the satellite image from Google Maps and the aformentioned font."
-  + "<br> <br> A physical print: <img src='images/bmsaBrochurePrintedV2.jpg' alt='' style='max-width:100%;max-height:100%;'>"
-  + "<br> <br> Past version of brochure: <br> <img src='images/bmsaOldBrochurePg1.png' alt='' style='max-width:50%;max-height:100%;'><img src='images/bmsaOldBrochurePg2.png' alt='' style='max-width:50%;max-height:100%;'>";
+  + "<br> <br> A physical print: <img src='images/bmsaBrochurePrintedV2.webp' alt='' style='max-width:100%;max-height:100%;'>"
+  + "<br> <br> Past version of brochure: <br> <img src='images/bmsaOldBrochurePg1.webp' alt='' style='max-width:50%;max-height:100%;'><img src='images/bmsaOldBrochurePg2.webp' alt='' style='max-width:50%;max-height:100%;'>";
 
 
 
 
   const psych = 
   why
-  + "to design a poster to advertise a performance at the Hamilton House for Adult Learning Exchange for senior citizens"
+  + "There was to be a performance for senior citizens at the 'Hamilton House for Adult Learning Exchange'. My task was to get people excited about it!"
   + how
-  + "researched 60s era San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities and the 'if people care enough, they’ll lean in and look closer' (Wes Wilson) philosophy associated with psychedelic art, while trying to strike a balance with modern design focus on readibility and simplicity. Ended up with the final version after 59 distinct iterations in Illustrator:"
-  + "<br> <br> <img src='images/HamiltonHousePosterTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
+  + "I researched San Francisco psychedelic rock art and worked to develop a poster that would invoke the twisting and vibrant qualities of that 60s-era. An attempt was made to embrace Wes Wilson's “if people care enough, they’ll lean in and look closer” philosophy, while also trying to strike some balance with modern design requirements of readibility and simplicity. Ended up with the final version after 59 distinct iterations in Illustrator:"
+  + "<br> <br> <img src='images/HamiltonHousePosterTimeline.webp' alt='' style='max-width:100%;max-height:100%;'>"
 
 
   const winter = 
   why
   + "As the first large-scale event open to the broader Brown University community in years, the Brown Muslim Student Association needed clear and engaging advertising material for an upcoming event with a distinguished speaker."
   + how
-  + "Overall, I was striving towards a design that had a calm, warm, and dignified feel. This was achieved especially through the colors and arrangements. The eye-catching picture was used to place special emphasis on the important guest speaker. Snowflakes that I based on traditional Islamic tilework patterns were created to represent the winter theme of the banquet, while also providing an element of visual delight for those who looked closely. Key information was refined and grouped at the bottom for fast, at-a-glance understanding, each topic indexed by unambiguous icons. Information like “Free; All Welcome” is usually not explicitly stated on college campus posters, but was specifically included here to ensure zero doubt that everyone was invited. After creating the final version, it was also adapted it to some other sizes for various advertising platforms."
-  + "<br> <br> Some later Illustrator iterations: <img src='images/winterBanquetTimeline.png' alt='' style='max-width:100%;max-height:100%;'>"
+  + "Overall, I was striving towards a design that had a calm, warm, and dignified feel. This was achieved especially through the colors and arrangements. The eye-catching picture was used to place special emphasis on the important guest speaker. Snowflakes that I based on traditional Islamic tilework patterns were created to represent the winter theme of the banquet, while also providing an element of visual delight for those who looked closely. Key information was refined and grouped at the bottom for fast, at-a-glance understanding, each topic 'indexed' by unambiguous icons. Information like “Free; All Welcome” is usually not explicitly stated on college campus posters, but was specifically included here to ensure zero doubt that everyone was invited. After creating the final version, it was also adapted it to some other sizes for various advertising platforms."
+  + "<br> <br> Some of the Illustrator iterations: <img src='images/winterBanquetTimeline.webp' alt='' style='max-width:100%;max-height:100%;'>"
 
 
   const ygaAppDescription = 
@@ -1061,7 +1098,7 @@ $(document).ready(function() {
   +       "A ‘challenge’ is either a step-by-step tutorial or a more open-ended creative prompt. These are displayed in a dedicated feed visible to all users of the app. Though some of these ‘challenges’ are made by YGA professionals, the majority are community-submitted."
   +       br + "Any user is able to ‘respond’ to a challenge. Such a response is not in the form of a textual comment, but instead a ‘creation’ that the user has made after being inspired by the challenge itself or even by the responses that others had submitted. Users are encouraged to contribute anything from carbon copies to creations that have the thinnest thread of similarity with what’s come before. All submissions set to ‘public’ are visible right under the ‘challenge’ itself for all users to see."
   +       br + br + "One goal with ‘challenges’ was to provide a lot of inspiration and instructions for all users. Just as LEGO instructions do, the challenges provide some structure that makes it easier to start building things that might have seemed unachievable otherwise."
-  +       br + "The other goal was to deliberately structure the social interaction between users. In the traditional social network, especially when it comes to images and art, a ‘post’ ordinarily to be about oneself and one’s own work/thoughts/experiences. We wanted to organize our experience to be more explicitly like a back-and-forth conversation one might see in a design class: When a user submits a ‘challenge’, they are either asking an open-ended question to the community, or are literally making a creation of their own more accessible by making a tutorial of it. Even when a user simply responds with one of their own creations, it is in the context of a specific, ongoing ‘conversation’ of creations influenced and inspired directly by each other."
+  +       br + "The other goal was to deliberately structure the social interaction between users. In the traditional social network, especially when it comes to images and art, a ‘post’ ordinarily tends to be about oneself and one’s own work/thoughts/experiences. We wanted to organize our experience to be more explicitly like a back-and-forth conversation one might see in a design class: When a user submits a ‘challenge’, they are either (1) asking an open-ended question to the community, or (2) are literally making a creation of their own more accessible by making a tutorial of it. Even when a user simply responds with one of their own creations, it is in the context of a specific, ongoing ‘conversation’ of creations influenced and inspired directly by each other."
   +     "</dd>"
   + br
   +   "<dt>A Personal ‘Collection’ of Creations:</dt>"
@@ -1079,26 +1116,44 @@ $(document).ready(function() {
   const symbiosis =
   why
   + "For the final project of the course Designing Human-Centered Robots, I and two others were really interested in developing a concept that would involve exploring nudge theory, habit-forming, tragedy of the commons, and related themes within behavioral economics. We settled on an unusual challenge for ourselves: How could we foster and incentivize more of a symbiotic relationship between two people? How could we provide motivatation to actively help the other along?"
+  + br + br
+  + "<a href='https://drive.google.com/file/d/1pAp1fCvrlE144tUKxnTPMwdR8eAFiZ3R/view?usp=sharing'><span style='font-weight: 900;'>See the 3 minute concept video!</span></a>"
 
   const symbiosis2 =
   how
   + "This project involved a lot of divergent and convergent ideation, sketching, research, and many iterations of physical prototyping."
-  + " The process is documented in-depth on the blog here."
+  + " The entire process is documented in-depth on the short blog posts here: "
+ 
+  + "<ol type='1'>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/166773331270/playing-with-paper-and-light'>first ideas</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/166938043055/the-redesigned-pill-bottle'>pill bottle: research, sketches, prototypes</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/167943656320/the-redesigned-pill-bottle-2-3d-printing'>pill bottle: refined prototype</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/167944494950/the-redesigned-pill-bottle-3-trash-can-1'>pivot to trash can + brainstorming</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168529625880/trash-can-2-death'>trash can exploration</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168530965595/trash-can-3-some-wandering-in-the-desert-of-the'>pivot to public symbiosis</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168543238195/public-symbiosis-2-research-and-fleshing-out'>public symbiosis: research, ideation, decisions</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168552717310/public-symbiosis-3-materials'>public symbiosis: materials for prototypes</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168554262685/public-symbiosis-4-user-interaction-and-task'>public symbiosis: developing UX</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168555591650/public-symbiosis-5-general-progress'>public-symbiosis: technical progress</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168556134180/public-symbiosis-6-first-designs-and-displaying'>public symbiosis: visual design 1</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168558280040/public-symbiosis-7-generations-of-cases'>public symbiosis: physical protyping</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168558940435/public-symbiosis-8-further-screen-designs'>public symbiosis: visual design 2</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168559608065/public-symbiosis-9-a-summary-of-the-code'>public symbiosis: programming</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168559619900/public-symbiosis-10-final-preparation-with-a-hint'>public symbiosis: wrapup</a></li>"
+  +   "<li><a target='_blank' href='https://rubanblr.tumblr.com/post/168562556035/public-symbiosis-11-the-last-day'>public symbiosis: feedback</a></li>"
+  + "</ol>"
+  + br 
+  + "Description of the concept idea:"
+  + br
+  + "Lets say two people named Dana and Philipe are friends. Philipe enters his major tasks for the week into a Google Sheets spreadsheet that we designed. As Philipe makes progress on a task, he updates the progress of the task in the spreadsheet via a dropdown with the options: Started, 25%, 50%, 75%, Done."
   + br + br
-  + "The final iteration of the concept was as follows:"
-  + br
-  + "Person1 enters their major tasks for the week into a Google Sheets spreadsheet that we designed. As Person1 makes progress on a task, they update the progress of the task in spreadsheet via a dropdown with the options: Started, 25%, 50%, 75%, Done."
-  + br
-  + "Now at the same time, Person2 carries a small device (pictured) that we also designed. This badge would be updated in real-time with the current status of the task that Person1 is working on. This allows Person2 to have at-a-glance information about how Person1 is progressing. With this information, it becomes easier for Person2 to know when might be a good time to check in with Person1 (perhaps if progress has stagnated for some time for example.) It also makes it much easier for Person2 to provide real positive encouragement by celebrating the work of Person1. And not only when a task is completed, but even as progress towards it is made."
-  + br
-  + "The additional twist is that Person2 actually wears said device on their chest! Similar to the mechanisms with the 'I voted' sticker, this provides Person2 with a tiny bit of additional extrinsic motivation to help Person1 fulfill their task. Especially once the task is completed, Person2 could feel proud about the 'I helped someone today 👍' message displayed on their chest for the rest of the day."
-  + br
-  + "Ideally, Person1 would simultaneously be wearing a badge for Person2 and helping them along with their tasks as well, which would ensure a more reciprocal relationship."
-  + br
-  + "This is more speculative, but it would be interesting to study whether people who see Person2's tag would be slightly more inclined to be friendly to those around them right after."
-  + br
-  + "It would also be interesting to explore how/whether this task-badge system could be used between people who didn't know each other well beforehand. That would be a good opportunity to form bonds with others based essentially what is shared work."
-
+  + "Now at the same time, Dana carries a small device (pictured) that we also designed. This badge would be updated in real-time with the current status of the task that Philipe is working on. This allows Dana to have at-a-glance information about how Philipe is progressing on his current task. With this information, it becomes easier for Dana to know when might be a good time to check in with Philipe (perhaps if progress has stagnated for some time for example.) It also makes it much easier for Dana to provide real positive encouragement by celebrating the work of Philipe – not only when a task is completed, but even as progress towards it is made!"
+  + br+ br
+  + "The additional twist is that Dana actually wears said device on her chest! Similar to the mechanisms with the 'I voted' sticker, this provides Dana with a tiny bit of additional extrinsic motivation to help Philipe fulfill their task. Especially once the task is completed, Dana could feel proud about the 'I helped someone today' message being displayed on her chest for the rest of the day."
+  + br+ br
+  + "Ideally, the reverse would also be true at the same time: Philipe would simultaneously be wearing a badge for Dana and helping her along with her tasks as well, which would allow a reciprocal partnership, where they each can hold each other accountable."
+  + br+ br
+  + "Because of the way such a system might start to reframe individual tasks into shared goals, it would be interesting to test whether this system could start to affect a person's empathy levels, foster more communal perspectives on work, and deepen understandings between participants."
 
 
 
@@ -1108,18 +1163,24 @@ $(document).ready(function() {
   + why
   + "Under President Obama’s administration, a far-reaching transparency initiative was started for the US Intelligence community to have more open communication with US citizens. Understandably though, some Intelligence employees were hesitant about the benefits of such a program. My task was to create a workplace poster to help employees in the Intelligence community see more value in the transparency initiatives."
   + how
-  + "I first researched the main motivations behind the hesitancies that Intelligence employees might have. Among other concerns, there was a sense that more transparency wasn’t really neccessary, and that it seemed unideal to then put resources into something that wasn’t needed. Because a poster has to be quickly digested, I decided I had to find an extrememly simple argument to make that could be communicated in seconds. After a lot of deliberation, I had the idea of literalizing the concept of transparency and taking advantage of my ‘outsider’ perspective. I settled on communicating the idea that when the wider US public lacks views into the Intelligence community, they end up imagining the worst and relying on tropes from the only exposure they do have – exaggerated movies and shows."
-  + br + "After this, I went through many iterations on the poster itself. One constant was the presence of elements like the alien dissection, which I hoped would provide employees with some levity. :)"
+  + "I first researched the main motivations behind the hesitancies that Intelligence employees might have. Among other concerns, there was a sense that more transparency wasn’t really necessary, and that it seemed unideal to then put resources into something that wasn’t needed."
+  + br + br + "Because a poster has to be quickly digested, I decided I had to find an extrememly simple argument to make that could be communicated in seconds. After a lot of deliberation, I had the idea of literalizing the concept of transparency and taking advantage of my ‘outsider’ perspective. I settled on communicating the idea that when the wider US public lacks views into the Intelligence community, they end up imagining the worst and relying on tropes from the only exposure they do have – exaggerated movies and shows."
+  + br + br + "After this, I went through many iterations on the poster itself. One constant was the presence of elements like the alien dissection, which I hoped would provide employees with some levity. :)"
 
 
   const reaching = 
   why
-  + "Through this piece, I wanted to represent my drive to always keep reaching for the ‘next thing’. Though our undying urge for new innovation is often uncritically framed as one of humanity's greatest strengths, it’s not necessarily purely positive. Without introspection, such drive can lead to change for the sake of change alone while reinforcing a discontentment for the magic that exists even now. Worse, it can become detached from any real needs of real people. (For example, there are many examples of audacious architecture that is different for the sake of being different, with really no other meaning or intent. Sometimes these literally worsen the lives of the surrounding community, precisely because of the sacrifices made to accommodate that novelty.) I tried to represent this all with a disembodied hand that is eternally reaching, but for nothing in particular. The hand was rendered as a painting in a literal three dimensions, which one could easily argue was a gimmick for the sake of novelty in itself!"
-  + "<br> <br> A closer view: <img src='images/reachCloseReducedHighRes.png' alt='' style='max-width:100%;max-height:100%;'>"
+  + "Through this sculpture, I wanted to represent my drive to always keep reaching for the ‘next thing’. "
+  + br + br
+  + "Though our undying urge for new innovation is often uncritically framed as one of humanity's greatest strengths, it’s not necessarily a pure positive. Without introspection, such drive can lead to change for the sake of change alone while reinforcing a discontentment for the magic that exists already. Worse, it can become detached from real needs of real people. (For example, there are many examples of audacious architecture that are different for the sake of being different, with really no deeper meaning or intent. Sometimes these literally <i>worsen</i> the lives of the surrounding community, precisely <i>because</i> of the sacrifices made to accommodate that novelty.)"
+  + br + br
+  + "I tried to represent this all with a disembodied hand that is eternally reaching, but for nothing in particular. The hand was rendered as a painting in a literal three dimensions. One could easily argue this piece itself was a gimmick for the sake of novelty in itself!"
+  + "<br> <br> A closer view: <img src='images/reachCloseReducedHighRes.webp' alt='' style='max-width:100%;max-height:100%;'>"
   + how
-  + "After challenging myself to extend a painting out of the traditional two dimensions, I explored many possibilities. I was inspired by lightboxes and decided to make many layers that would be stacked on top of each other. Eventually I learned about acetate sheets, and their transparency made the end result possible."
-  + br + "Planning out the hand itself was tricky because it required thought not only about usual factors like pose, outline, shape, and shadows, but about the cross-sections of the hand too. This took a lot of measurements and careful planning."
-  + br + "Constructing the housing was another challenge. It had to be open from both sides and non-distracting while also being really stable.";
+  + "After initially challenging myself to extend a painting out of the traditional two dimensions, I explored many possibilities. I was inspired by lightboxes and decided to make many layers that would be stacked on top of each other. Eventually I learned about acetate sheets, and their transparency made the end result possible."
+  + br + br + "Planning out the hand itself was tricky because it required thought not only about usual factors like pose, outline, shape, and shadows, but about the cross-sections of the hand too. This took a lot of measurements and careful planning."
+  + br + br + "Constructing the housing was another challenge. It had to be open from both sides and non-distracting while also being really stable."
+  + br + br + "The journey in terms of meaning was interesting because this project itself totally started as primarily a desire to paint in an unconventional way, and I wanted to represent that somehow. It was really only after finishing the first iteration that I realized that the absence of an arm or body added a tinge of creepiness, starting to question the underlying and maybe naive assumptions about 'pushing boundaries'.";
   
 
   const link = 
@@ -1139,50 +1200,50 @@ $(document).ready(function() {
 
 
   // I like all these color options alot :/ Finalized choice soon
-  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#4E3D42');
-  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#92B6B1');
-  addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#666A86', null, '');
-  // addImagePost('images/winterBanquetLowRes.png', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#788AA3');
+  // addImagePost('images/winterBanquetLowRes.webp', 'images/winterBanquetV1.webp', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#4E3D42');
+  // addImagePost('images/winterBanquetLowRes.webp', 'images/winterBanquetV1.webp', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#92B6B1');
+  addImagePost('images/winterBanquetLowRes.webp', 'images/winterBanquetV1.svg', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#666A86', null, '');
+  // addImagePost('images/winterBanquetLowRes.webp', 'images/winterBanquetV1.webp', 'Banquet Poster', 'representing tranquility', winter, '#visual', '#788AA3');
   // Also considered colors: #136F63, 
 
-  addImagePost('images/HamiltonHousePosterVer3.svg', null, '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual', '#491d7c', null, '');
+  addImagePost('images/HamiltonHousePosterVer3.webp', 'images/HamiltonHousePosterVer3.svg', '60s Psychedelic Poster', 'invoking nostalgia', psych, '#visual', '#491d7c', null, '');
 
-  addImagePost('images/dentalV3.svg', null, 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D', null, '');
+  addImagePost('images/dentalV3.webp', 'images/dentalV3.svg', 'Dent to Deal', 'visualizing poetry', dent, '#visual', '#6c698D', null, '');
   // Also considered colors: #54442B, black
 
-  addImagePost('images/ygaAppV5LowRes.png', 'images/ygaAppV6ClearHighRes.png', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0', null, ygaAppDescription2);
+  addImagePost('images/ygaAppV5LowRes.webp', 'images/ygaAppV6ClearHighRes.webp', 'Non-profit Teen Social Network', 'encouraging creation and confidence', ygaAppDescription, '#visual', '#1db5a0', null, ygaAppDescription2);
   // Initially wanted #2FD2BB but it was probs too light 
 
-  // addImagePost('images/bmsaMapV1LowRes.png', 'images/bmsaBrochure.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');  
-  addImagePost('images/bmsaMapV2LowRes.png', 'images/bmsaBrochureV2HighRes.png', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023', PRIORITIZE_WIDTH, '');
+  // addImagePost('images/bmsaMapV1LowRes.webp', 'images/bmsaBrochure.webp', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023');  
+  addImagePost('images/bmsaMapV2LowRes.webp', 'images/bmsaBrochureV2HighRes.webp', 'Informational Brochure', 'welcoming new faces', bmsa, '#visual', '#202023', PRIORITIZE_WIDTH, '');
 
 
 
-  // addImagePost('images/BforWaterInfo.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
-  addImagePost('images/bwater.svg', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7', null, '');
+  // addImagePost('images/BforWaterInfo.webp', null, 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#9d712c');
+  addImagePost('images/bwater.webp', 'images/bwater.svg', 'Water Consumption Infographic', 'representing a global crisis', water, '#visual', '#7490a7', null, '');
 
-  addImagePost('images/badgeV1LowRes.jpeg', 'images/badgeV1HighRes.jpeg', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e', null, symbiosis2);
+  addImagePost('images/badgeV1LowRes.webp', 'images/badgeV1HighRes.webp', 'Social Symbiosis Prototype', 'facilitating collaboration', symbiosis, '#visual', '#15599e', null, symbiosis2);
 
 
-  addImagePost('images/reachLowRes.png', 'images/reachReducedHighRes.png', 'Reaching', 'painting in three dimensions', reaching, '#visual', '#5d2c26', null, '');
+  addImagePost('images/reachLowRes.webp', 'images/reachReducedHighRes.webp', 'Reaching', 'painting in three dimensions', reaching, '#visual', '#5d2c26', null, '');
 
-  addImagePost('images/linkLowRes.png', 'images/linkHighRes.png', 'Link from ‘Legend of Zelda’', 'sculpting delicately', link, '#visual', '#5d332a', null, '');
+  addImagePost('images/linkLowRes.webp', 'images/linkHighRes.webp', 'Link from ‘Legend of Zelda’', 'sculpting delicately', link, '#visual', '#5d332a', null, '');
   // Also considered colors: #a2695b
 
-  addImagePost('images/odniPosterV7ReducedLowRes.png', 'images/odniPosterV2HighRes.png', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e', null, '');
+  addImagePost('images/odniPosterV7ReducedLowRes.webp', 'images/odniPosterV2HighRes.webp', 'ODNI Poster', 'making a case for transparency', odni, '#visual', '#c5a07e', null, '');
 
 
 
 
-  // addImagePost('images/responsiveGalleryGifStatic.gif','images/responsiveGalleryGif.gif', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual', '#781260');
+  // addImagePost('images/responsiveGalleryGifStatic.webp','images/responsiveGalleryGif.webp', 'responsiveWebGallery', 'the lightbox redesigned', respGal, '#visual', '#781260');
   
 
-  addImagePost('images/microwaveRedesignCent.png', 'images/microwaveRedesign.png', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237', null, '');
+  addImagePost('images/microwaveRedesignCent.webp', 'images/microwaveRedesign.webp', 'Touchscreen Interface Design', 'the microwave reimagined', micro, '#visual', '#4B4237', null, '');
   // Also considered colors: #D6A2AD, #ADC698, #157A6E, #813405, #f17013
 
-  addImagePost('images/airpoolerGifStatic.png', 'images/airpoolerGif.gif', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual', '#018192', null, '');
-  addImagePost('images/VirgoOpStill.png', 'images/VirgoOp.gif', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual', '#2ea165', null, '');
-  addImagePost('images/VirgoAppDemoV2Still.png', 'images/VirgoAppDemoV3.gif', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual', '#2bb370', null, '');
+  addImagePost('images/airpoolerGifStatic.webp', 'images/airpoolerGif.webp', 'Airpooler', 'a ride-sharing webapp for student travelers', airp, '#visual', '#018192', null, '');
+  addImagePost('images/VirgoOpStill.webp', 'images/VirgoOp.webp', 'Operations Webpanel', 'for coordinating Virgo Inc business', virgw, '#visual', '#2ea165', null, '');
+  addImagePost('images/VirgoAppDemoV2Still.webp', 'images/VirgoAppDemoV3.webp', 'Virgo iOS App', 'connecting consumers to small businesses', virga, '#visual', '#2bb370', null, '');
 
 
 
